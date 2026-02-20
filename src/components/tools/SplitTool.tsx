@@ -212,7 +212,7 @@ export const SplitTool: React.FC = () => {
                 <span className="text-xs font-bold uppercase tracking-widest">Local Processing</span>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Your file is processed entirely in your browser using the MuPDF engine. No data is ever uploaded to a server.
+                Your file is processed entirely in your browser. No data is ever uploaded to a server.
               </p>
            </div>
         </div>

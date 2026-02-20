@@ -66,8 +66,6 @@ export default function GlassPDF() {
         <div className="flex items-center space-x-4">
           <Button variant="ghost" className="text-muted-foreground hover:text-foreground">About</Button>
           <Button variant="ghost" className="text-muted-foreground hover:text-foreground">Contact</Button>
-          <div className="h-6 w-px bg-white/20"></div>
-          <p className="text-xs font-medium text-secondary opacity-70">MuPDF Engine V1.0</p>
         </div>
       </header>
 
@@ -174,7 +172,6 @@ export default function GlassPDF() {
         <div className="flex space-x-6">
           <span className="hover:text-secondary cursor-pointer">Privacy First</span>
           <span className="hover:text-secondary cursor-pointer">Fast & Light</span>
-          <span className="hover:text-secondary cursor-pointer">MuPDF Enabled</span>
         </div>
       </footer>
     </div>
