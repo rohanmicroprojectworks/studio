@@ -7,9 +7,10 @@ import { splitPDF, splitAndMergePDF, downloadBlob } from '@/lib/pdf-service';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { FileText, Scissors, Plus, X, Eye, Loader2 } from 'lucide-react';
+import { FileText, Scissors, Plus, X, Eye, Loader2, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import * as pdfjsLib from 'pdfjs-dist';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 // Configure PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
@@ -64,11 +65,11 @@ const PageThumbnail = ({ file, pageNum }: { file: File; pageNum: number }) => {
   }, [file, pageNum]);
 
   return (
-    <div className="relative w-24 h-32 bg-white/10 rounded-lg border border-white/20 overflow-hidden flex items-center justify-center shadow-inner">
-      {loading && <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />}
-      {error && <span className="text-[8px] text-destructive font-bold uppercase">Invalid Page</span>}
+    <div className="relative w-24 h-32 bg-white/10 rounded-lg border border-white/20 overflow-hidden flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-300">
+      {loading && <Loader2 className="w-5 h-5 animate-spin text-secondary" />}
+      {error && <span className="text-[10px] text-destructive font-black uppercase tracking-tighter text-center px-1">Invalid<br/>Page</span>}
       <canvas ref={canvasRef} className={`w-full h-full object-contain ${loading || error ? 'hidden' : ''}`} />
-      <div className="absolute bottom-1 right-1 bg-black/50 text-[8px] text-white px-1 rounded">P.{pageNum}</div>
+      <div className="absolute bottom-1 right-1 bg-black/60 backdrop-blur-md text-[9px] text-white px-1.5 py-0.5 rounded font-bold">P.{pageNum}</div>
     </div>
   );
 };
@@ -84,40 +85,49 @@ export const SplitTool: React.FC = () => {
   useEffect(() => {
     if (file) {
       const getPages = async () => {
-        const buffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
-        setTotalPages(pdf.numPages);
+        try {
+          const buffer = await file.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+          setTotalPages(pdf.numPages);
+          // Auto-set the end of the first range to the last page if it's empty
+          setRanges([{ start: '1', end: pdf.numPages.toString(), id: '1' }]);
+        } catch (e) {
+          toast({ variant: "destructive", title: "Error", description: "Could not read PDF metadata." });
+        }
       };
       getPages();
     }
-  }, [file]);
+  }, [file, toast]);
 
   const handleSplit = async () => {
     if (!file) return;
     setIsProcessing(true);
     try {
-      const validRanges = ranges.map(r => ({ 
-        start: Math.max(1, parseInt(r.start) || 1), 
-        end: Math.min(totalPages, parseInt(r.end || r.start) || totalPages) 
-      })).filter(r => r.start <= r.end);
+      const validRanges = ranges.map(r => {
+        const start = Math.max(1, parseInt(r.start) || 1);
+        const end = Math.min(totalPages, parseInt(r.end || r.start) || totalPages);
+        return { start, end };
+      }).filter(r => r.start <= r.end);
 
       if (validRanges.length === 0) {
-        toast({ title: "Error", description: "Please enter valid page ranges." });
+        toast({ variant: "destructive", title: "Invalid Ranges", description: "Please ensure start pages are not greater than end pages." });
+        setIsProcessing(false);
         return;
       }
 
       if (mergeAll) {
         const result = await splitAndMergePDF(file, validRanges);
-        downloadBlob(result, `extracted-ranges-${file.name}`);
+        downloadBlob(result, `extracted-${file.name}`);
       } else {
         const results = await splitPDF(file, validRanges);
         results.forEach((data, i) => {
-          downloadBlob(data, `split-part-${i + 1}-${file.name}`);
+          const range = validRanges[i];
+          downloadBlob(data, `split-${range.start}-${range.end}-${file.name}`);
         });
       }
-      toast({ title: "Success", description: `PDF split completed! ${mergeAll ? 'Merged into one file.' : ''}` });
+      toast({ title: "Extraction Complete", description: `Successfully processed ${validRanges.length} range(s).` });
     } catch (err) {
-      toast({ title: "Error", description: "Failed to split PDF." });
+      toast({ variant: "destructive", title: "Error", description: "Split operation failed locally." });
     } finally {
       setIsProcessing(false);
     }
@@ -142,129 +152,157 @@ export const SplitTool: React.FC = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-20">
-      <div className="flex justify-between items-center">
+    <div className="max-w-6xl mx-auto space-y-8 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-headline font-black text-secondary-foreground">Advanced Split PDF</h2>
-          <p className="text-muted-foreground">Extract specific page ranges with live visual confirmation.</p>
+          <h2 className="text-4xl font-headline font-black text-secondary-foreground tracking-tight">Split Workspace</h2>
+          <p className="text-muted-foreground mt-1">Extract specific page segments with visual confirmation.</p>
         </div>
-        <Button variant="outline" onClick={() => setFile(null)} className="glass-button rounded-full">Change File</Button>
+        <div className="flex space-x-3">
+          <Button variant="outline" onClick={() => setFile(null)} className="glass-button rounded-2xl h-12 px-6">
+            New File
+          </Button>
+          <Button 
+            className="bg-secondary hover:bg-secondary/90 text-white font-bold h-12 px-8 rounded-2xl shadow-xl transition-all hover:scale-105 active:scale-95"
+            onClick={handleSplit}
+            disabled={isProcessing}
+          >
+            {isProcessing ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Scissors className="w-5 h-5 mr-2" />}
+            {isProcessing ? "Processing..." : "Export Extraction"}
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* File Overview Card */}
-        <div className="lg:col-span-4 glass-card p-8 rounded-3xl flex flex-col items-center justify-center space-y-6 sticky top-8">
-           <div className="p-8 bg-primary/20 rounded-[2rem] shadow-inner relative">
-              <FileText className="w-16 h-16 text-secondary-foreground" />
-              <div className="absolute -bottom-2 -right-2 bg-secondary text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-                {totalPages} PAGES
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+        {/* File Overview Sidebar */}
+        <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-8">
+           <div className="glass-card p-8 rounded-[2rem] flex flex-col items-center justify-center space-y-6">
+              <div className="p-10 bg-primary/20 rounded-[2.5rem] shadow-inner relative group">
+                 <FileText className="w-20 h-20 text-secondary-foreground group-hover:rotate-6 transition-transform" />
+                 <div className="absolute -bottom-2 -right-2 bg-secondary text-white text-[10px] font-black px-4 py-1.5 rounded-full shadow-2xl border border-white/20">
+                   {totalPages} PAGES
+                 </div>
               </div>
-           </div>
-           <div className="text-center w-full">
-              <p className="font-bold text-lg truncate px-4">{file.name}</p>
-              <p className="text-sm text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-           </div>
-           
-           <div className="w-full pt-4 border-t border-white/20 space-y-4">
-              <div className="flex items-center space-x-3 bg-white/20 p-4 rounded-2xl cursor-pointer hover:bg-white/30 transition-colors" onClick={() => setMergeAll(!mergeAll)}>
-                <Checkbox 
-                  checked={mergeAll} 
-                  onCheckedChange={(checked) => setMergeAll(!!checked)}
-                  id="merge-toggle"
-                  className="rounded-md border-secondary text-secondary"
-                />
-                <label htmlFor="merge-toggle" className="text-sm font-medium leading-none cursor-pointer">
-                  Merge all ranges into one PDF
-                </label>
+              <div className="text-center w-full">
+                 <p className="font-bold text-xl truncate px-4 text-foreground">{file.name}</p>
+                 <p className="text-sm text-muted-foreground font-medium">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
               </div>
               
-              <Button 
-                className="w-full bg-secondary hover:bg-secondary/80 text-white font-bold h-14 rounded-2xl shadow-xl transition-all hover:scale-[1.02] active:scale-95"
-                onClick={handleSplit}
-                disabled={isProcessing}
-              >
-                {isProcessing ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Scissors className="w-5 h-5 mr-2" />}
-                {isProcessing ? "Processing..." : "Export Extraction"}
-              </Button>
+              <div className="w-full pt-6 border-t border-white/10 space-y-4">
+                 <div 
+                   className="flex items-center space-x-3 bg-white/10 p-5 rounded-2xl cursor-pointer hover:bg-white/20 transition-all border border-white/5 group" 
+                   onClick={() => setMergeAll(!mergeAll)}
+                 >
+                   <Checkbox 
+                     checked={mergeAll} 
+                     onCheckedChange={(checked) => setMergeAll(!!checked)}
+                     id="merge-toggle"
+                     className="rounded-md border-secondary/50 data-[state=checked]:bg-secondary data-[state=checked]:border-secondary"
+                   />
+                   <div className="flex flex-col">
+                      <label htmlFor="merge-toggle" className="text-sm font-bold leading-none cursor-pointer text-foreground group-hover:text-secondary transition-colors">
+                        Combine all ranges
+                      </label>
+                      <span className="text-[10px] text-muted-foreground mt-1">Export as a single PDF document</span>
+                   </div>
+                 </div>
+              </div>
+           </div>
+
+           <div className="glass-card p-6 rounded-3xl bg-secondary/5 border-secondary/10">
+              <div className="flex items-center space-x-2 text-secondary mb-2">
+                <Info className="w-4 h-4" />
+                <span className="text-xs font-bold uppercase tracking-widest">Local Processing</span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Your file is processed entirely in your browser using the MuPDF engine. No data is ever uploaded to a server.
+              </p>
            </div>
         </div>
 
-        {/* Range Settings Area */}
-        <div className="lg:col-span-8 space-y-4">
+        {/* Range Settings Workspace */}
+        <div className="lg:col-span-8 space-y-6">
           <div className="flex items-center justify-between px-2">
-             <h3 className="font-headline font-bold text-lg flex items-center">
-                <Eye className="w-5 h-5 mr-2 text-secondary" /> 
-                Extraction Workspace
+             <h3 className="font-headline font-black text-xl flex items-center text-secondary-foreground">
+                <Eye className="w-6 h-6 mr-3 text-secondary" /> 
+                Extraction Map
              </h3>
              <Button 
                 variant="ghost" 
                 size="sm"
-                className="text-secondary hover:text-secondary-foreground hover:bg-secondary/10 rounded-full"
+                className="text-secondary hover:text-white hover:bg-secondary rounded-xl px-4 py-5 font-bold transition-all shadow-sm"
                 onClick={addRange}
               >
-                <Plus className="w-4 h-4 mr-1" /> Add Range
+                <Plus className="w-5 h-5 mr-2" /> New Range
               </Button>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             {ranges.map((range, index) => (
-              <div key={range.id} className="glass-card p-6 rounded-3xl relative group">
+              <div key={range.id} className="glass-card p-8 rounded-[2.5rem] relative group border-white/10 shadow-2xl hover:bg-white/40 transition-all">
                 {ranges.length > 1 && (
                   <button 
                     onClick={() => removeRange(range.id)}
-                    className="absolute -top-2 -right-2 bg-destructive/10 text-destructive p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-white"
+                    className="absolute -top-3 -right-3 bg-white shadow-xl text-destructive p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-destructive hover:text-white border border-destructive/10"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-5 h-5" />
                   </button>
                 )}
                 
-                <div className="flex flex-col md:flex-row gap-8 items-center">
-                  <div className="flex-1 w-full space-y-4">
-                    <div className="flex items-center space-x-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                       <span>Range {index + 1}</span>
+                <div className="flex flex-col xl:flex-row gap-10 items-center">
+                  <div className="flex-1 w-full space-y-6">
+                    <div className="flex items-center justify-between">
+                       <span className="text-xs font-black text-secondary uppercase tracking-[0.2em] bg-secondary/10 px-3 py-1 rounded-lg">Segment {index + 1}</span>
                     </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="flex-1 space-y-2">
-                        <label className="text-[10px] font-bold text-muted-foreground uppercase">Start Page</label>
+                    
+                    <div className="flex items-end space-x-6">
+                      <div className="flex-1 space-y-3">
+                        <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Start Page</label>
                         <Input 
                           type="number" 
                           value={range.start} 
                           min="1"
                           max={totalPages}
                           onChange={(e) => updateRange(range.id, 'start', e.target.value)}
-                          className="glass focus:ring-primary border-none rounded-xl h-12 text-lg font-bold"
+                          className="glass focus:ring-4 focus:ring-primary/20 border-none rounded-2xl h-14 text-xl font-black text-center"
                           placeholder="1"
                         />
                       </div>
-                      <div className="pt-6 text-muted-foreground">to</div>
-                      <div className="flex-1 space-y-2">
-                        <label className="text-[10px] font-bold text-muted-foreground uppercase">End Page</label>
+                      <div className="pb-4 text-muted-foreground font-headline font-black opacity-30 text-2xl">→</div>
+                      <div className="flex-1 space-y-3">
+                        <label className="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">End Page</label>
                         <Input 
                           type="number" 
                           min="1"
                           max={totalPages}
-                          placeholder={range.start || "End"}
+                          placeholder={range.start || "..."}
                           value={range.end} 
                           onChange={(e) => updateRange(range.id, 'end', e.target.value)}
-                          className="glass focus:ring-primary border-none rounded-xl h-12 text-lg font-bold"
+                          className="glass focus:ring-4 focus:ring-primary/20 border-none rounded-2xl h-14 text-xl font-black text-center"
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex space-x-4 shrink-0 bg-white/10 p-4 rounded-2xl border border-white/10 shadow-inner">
-                    <div className="text-center space-y-2">
+                  <div className="flex space-x-6 shrink-0 bg-white/20 p-6 rounded-[2rem] border border-white/20 shadow-inner">
+                    <div className="text-center space-y-3 group/thumb">
                       <PageThumbnail file={file} pageNum={parseInt(range.start) || 1} />
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase">Start Preview</span>
+                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block opacity-60 group-hover/thumb:text-secondary transition-colors">Start</span>
                     </div>
-                    <div className="text-center space-y-2">
+                    <div className="text-center space-y-3 group/thumb">
                       <PageThumbnail file={file} pageNum={parseInt(range.end || range.start) || 1} />
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase">End Preview</span>
+                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block opacity-60 group-hover/thumb:text-secondary transition-colors">End</span>
                     </div>
                   </div>
                 </div>
               </div>
             ))}
+            
+            {ranges.length > 0 && (
+              <div className="pt-4 text-center">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-[0.3em] font-black opacity-40">End of Extraction Map</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
