@@ -85,7 +85,7 @@ export default function PDFWorkspace() {
       case 'split': return <SplitTool />;
       case 'compress': return <CompressTool />;
       case 'image-converter': return <ImageConverterTool />;
-      case 'pdf-viewer': return <PDFViewerTool />;
+      case 'pdf-viewer': return <PDFViewerTool onExit={() => setActiveTool(null)} />;
       case 'protect': return <ProtectTool />;
       default: return null;
     }
@@ -93,39 +93,49 @@ export default function PDFWorkspace() {
 
   return (
     <div className="h-[100dvh] flex flex-col font-body overflow-hidden text-slate-900 dark:text-slate-100 selection:bg-secondary/20 relative bg-transparent">
-      <header className="z-50 px-4 md:px-8 h-14 flex justify-between items-center bg-white/20 dark:bg-black/20 backdrop-blur-2xl border-b border-white/20 dark:border-white/10 shrink-0 shadow-sm">
-        <div 
-          className="flex items-center space-x-3 cursor-pointer group"
-          onClick={() => setActiveTool(null)}
-        >
-          <div className="Btn scale-75 md:scale-90">
-            <div className="svgContainer">
-              <span className="text-white font-black text-xl select-none">G</span>
+      {/* Hide global header if PDF Viewer is active to maximize immersion */}
+      <AnimatePresence>
+        {activeTool !== 'pdf-viewer' && (
+          <motion.header 
+            initial={{ y: -60, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -60, opacity: 0 }}
+            className="z-50 px-4 md:px-8 h-14 flex justify-between items-center bg-white/20 dark:bg-black/20 backdrop-blur-2xl border-b border-white/20 dark:border-white/10 shrink-0 shadow-sm"
+          >
+            <div 
+              className="flex items-center space-x-3 cursor-pointer group"
+              onClick={() => setActiveTool(null)}
+            >
+              <div className="Btn scale-75 md:scale-90">
+                <div className="svgContainer">
+                  <span className="text-white font-black text-xl select-none">G</span>
+                </div>
+                <div className="BG"></div>
+              </div>
+              <h1 className="text-lg md:text-xl font-black tracking-tighter text-slate-900 dark:text-white group-hover:text-secondary transition-all duration-300">GlassPDF</h1>
             </div>
-            <div className="BG"></div>
-          </div>
-          <h1 className="text-lg md:text-xl font-black tracking-tighter text-slate-900 dark:text-white group-hover:text-secondary transition-all duration-300">GlassPDF</h1>
-        </div>
-        
-        <nav className="flex items-center space-x-6">
-          <div className="flex items-center">
-            <input 
-              type="checkbox" 
-              className="theme-checkbox" 
-              checked={theme === 'dark'}
-              onChange={(e) => setTheme(e.target.checked ? 'dark' : 'light')}
-              aria-label="Toggle theme"
-            />
-          </div>
-          <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/40 dark:hover:bg-white/10">
-            <Github className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-          </Button>
-        </nav>
-      </header>
+            
+            <nav className="flex items-center space-x-6">
+              <div className="flex items-center">
+                <input 
+                  type="checkbox" 
+                  className="theme-checkbox" 
+                  checked={theme === 'dark'}
+                  onChange={(e) => setTheme(e.target.checked ? 'dark' : 'light')}
+                  aria-label="Toggle theme"
+                />
+              </div>
+              <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/40 dark:hover:bg-white/10">
+                <Github className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+              </Button>
+            </nav>
+          </motion.header>
+        )}
+      </AnimatePresence>
 
       <main className={cn(
-        "flex-1 relative flex flex-col overflow-hidden p-4 md:p-6 lg:p-8",
-        !activeTool && "items-center justify-start overflow-y-auto custom-scrollbar"
+        "flex-1 relative flex flex-col overflow-hidden",
+        !activeTool && "items-center justify-start overflow-y-auto custom-scrollbar p-4 md:p-6 lg:p-8"
       )}>
         <AnimatePresence mode="wait">
           {!activeTool ? (
@@ -188,24 +198,35 @@ export default function PDFWorkspace() {
               animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
               exit={{ opacity: 0, scale: 1.02, filter: 'blur(10px)' }}
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full max-w-7xl mx-auto h-full flex flex-col min-h-0"
+              className={cn(
+                "w-full h-full flex flex-col min-h-0",
+                activeTool !== 'pdf-viewer' && "max-w-7xl mx-auto p-4 md:p-6 lg:p-8"
+              )}
             >
-              <div className="mb-4 flex items-center shrink-0">
-                <Button 
-                  variant="ghost" 
-                  onClick={() => setActiveTool(null)}
-                  className="rounded-2xl w-10 h-10 p-0 glass-button hover:bg-white/80 dark:hover:bg-white/20 shadow-md border-white/40 dark:border-white/10"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </Button>
-                <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-4"></div>
-                <div className="flex items-center space-x-3">
-                   <span className="font-black uppercase tracking-[0.2em] text-secondary text-xs">Workspace / {availableTools.find(t => t.id === activeTool)?.name}</span>
+              {activeTool !== 'pdf-viewer' && (
+                <div className="mb-4 flex items-center shrink-0">
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => setActiveTool(null)}
+                    className="rounded-2xl w-10 h-10 p-0 glass-button hover:bg-white/80 dark:hover:bg-white/20 shadow-md border-white/40 dark:border-white/10"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </Button>
+                  <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-4"></div>
+                  <div className="flex items-center space-x-3">
+                     <span className="font-black uppercase tracking-[0.2em] text-secondary text-xs">Workspace / {availableTools.find(t => t.id === activeTool)?.name}</span>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div className="flex-1 glass p-4 md:p-8 rounded-[2rem] md:rounded-[3rem] relative flex flex-col min-h-0 border-white/60 dark:border-white/10 shadow-2xl overflow-hidden">
-                <div className="flex-1 overflow-y-auto custom-scrollbar">
+              <div className={cn(
+                "flex-1 relative flex flex-col min-h-0",
+                activeTool !== 'pdf-viewer' ? "glass p-4 md:p-8 rounded-[2rem] md:rounded-[3rem] border-white/60 dark:border-white/10 shadow-2xl overflow-hidden" : "w-full"
+              )}>
+                <div className={cn(
+                  "flex-1 flex flex-col min-h-0",
+                  activeTool !== 'pdf-viewer' && "overflow-y-auto custom-scrollbar"
+                )}>
                   {renderActiveWorkspace()}
                 </div>
               </div>
