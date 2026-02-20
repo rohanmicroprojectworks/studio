@@ -50,7 +50,7 @@ export default function GlassPDF() {
   return (
     <div className="h-screen relative flex flex-col font-body overflow-hidden">
       {/* Navbar / Header */}
-      <header className="z-50 px-8 py-4 flex justify-between items-center bg-white/10 backdrop-blur-md border-b border-white/20 shrink-0">
+      <header className="z-50 px-8 py-2 flex justify-between items-center bg-white/10 backdrop-blur-md border-b border-white/20 shrink-0">
         <div 
           className="flex items-center space-x-4 cursor-pointer"
           onClick={() => setActiveTool(null)}
@@ -61,11 +61,11 @@ export default function GlassPDF() {
             </div>
             <div className="BG"></div>
           </button>
-          <h1 className="text-2xl font-headline font-black tracking-tight text-secondary-foreground">GlassPDF</h1>
+          <h1 className="text-xl font-headline font-black tracking-tight text-secondary-foreground">GlassPDF</h1>
         </div>
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" className="text-muted-foreground hover:text-foreground">About</Button>
-          <Button variant="ghost" className="text-muted-foreground hover:text-foreground">Contact</Button>
+          <Button variant="ghost" className="text-xs text-muted-foreground hover:text-foreground">About</Button>
+          <Button variant="ghost" className="text-xs text-muted-foreground hover:text-foreground">Contact</Button>
         </div>
       </header>
 
@@ -135,7 +135,7 @@ export default function GlassPDF() {
               exit={{ opacity: 0, x: -20 }}
               className="w-full max-w-7xl mx-auto flex-1 flex flex-col min-h-0"
             >
-              <div className="mb-6 flex items-center shrink-0">
+              <div className="mb-4 flex items-center shrink-0">
                 <Button 
                   variant="ghost" 
                   onClick={() => setActiveTool(null)}
@@ -165,15 +165,6 @@ export default function GlassPDF() {
           )}
         </AnimatePresence>
       </main>
-
-      {/* Footer */}
-      <footer className="px-8 py-3 flex justify-between items-center text-[10px] text-muted-foreground/60 uppercase tracking-[0.2em] bg-white/5 shrink-0">
-        <p>&copy; 2024 GlassPDF - Zero-Upload Local Processing</p>
-        <div className="flex space-x-6">
-          <span className="hover:text-secondary cursor-pointer">Privacy First</span>
-          <span className="hover:text-secondary cursor-pointer">Fast & Light</span>
-        </div>
-      </footer>
     </div>
   );
 }
