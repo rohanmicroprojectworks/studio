@@ -1,6 +1,6 @@
 /**
  * @fileoverview Split PDF Tool Component
- * Responsibility: Page range extraction with visual live previews and responsive layout.
+ * Responsibility: Page range extraction with visual live previews and Liquid Glass UI.
  * Author: GlassPDF Team
  * License: MIT
  */
@@ -167,14 +167,16 @@ export const SplitTool: React.FC = () => {
           <Button variant="outline" onClick={() => setSourceFile(null)} className="glass-button rounded-xl h-12 px-6 text-xs font-black uppercase tracking-widest flex-1 xl:flex-none">
             Swap File
           </Button>
-          <Button 
-            className="bg-secondary hover:bg-secondary/90 text-white font-black h-12 px-8 rounded-xl shadow-lg transition-all text-sm flex-1 xl:flex-none"
+          <button 
+            className="liquid-button h-12 px-8 rounded-xl flex-1 xl:flex-none group min-w-[180px]"
             onClick={onExecuteSplit}
             disabled={isProcessing}
           >
-            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Scissors className="w-4 h-4 mr-2" />}
-            {isProcessing ? "Processing..." : "Export Extraction"}
-          </Button>
+            <span className="liquid-button-text flex items-center font-black uppercase tracking-widest text-xs">
+              {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Scissors className="w-4 h-4 mr-2" />}
+              {isProcessing ? "Processing..." : "Export Extraction"}
+            </span>
+          </button>
         </div>
       </div>
 

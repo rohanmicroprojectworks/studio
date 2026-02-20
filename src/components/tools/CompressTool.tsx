@@ -1,6 +1,6 @@
 /**
  * @fileoverview Compress PDF Tool Component
- * Responsibility: Handle PDF file size reduction with quality presets.
+ * Responsibility: Handle PDF file size reduction with quality presets and Liquid Glass UI.
  * Author: GlassPDF Team
  * License: MIT
  */
@@ -11,7 +11,7 @@ import React, { useState } from 'react';
 import { FileUpload } from './FileUpload';
 import { compressPDFDocument, triggerDownload } from '@/lib/pdf-service';
 import { Button } from '@/components/ui/button';
-import { FileText, Zap, ShieldCheck, Gauge, Info, Loader2 } from 'lucide-react';
+import { FileText, Zap, ShieldCheck, Gauge, Info, Loader2, Minimize2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -145,18 +145,25 @@ export const CompressTool: React.FC = () => {
              ))}
            </div>
            
-           <Button 
-            className="w-full bg-secondary hover:bg-secondary/90 text-white font-black h-20 rounded-[2.5rem] shadow-2xl mt-10 text-2xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+           <button 
+            className="liquid-button w-full h-20 rounded-[2.5rem] mt-10 group"
             onClick={onCompressStart}
             disabled={processing}
           >
-            {processing ? (
-              <div className="flex items-center">
-                <Loader2 className="w-8 h-8 animate-spin mr-4" />
-                Optimizing Stream...
-              </div>
-            ) : "Compress PDF"}
-          </Button>
+            <span className="liquid-button-text flex items-center text-2xl font-black uppercase tracking-tight">
+              {processing ? (
+                <>
+                  <Loader2 className="w-8 h-8 animate-spin mr-4" />
+                  Optimizing Stream...
+                </>
+              ) : (
+                <>
+                  <Minimize2 className="w-8 h-8 mr-4" />
+                  Compress PDF
+                </>
+              )}
+            </span>
+          </button>
         </div>
       </div>
     </div>

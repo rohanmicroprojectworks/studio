@@ -48,6 +48,45 @@
   .glass-button {
     @apply bg-white/50 hover:bg-white/90 backdrop-blur-lg border border-white/60 text-foreground font-black transition-all duration-300 shadow-sm active:scale-95;
   }
+
+  /* True Liquid Glass Button Style */
+  .liquid-button {
+    @apply relative flex items-center justify-center gap-2 font-bold transition-all duration-500 overflow-hidden outline-none border-none cursor-pointer select-none;
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(25px) saturate(180%);
+    box-shadow: 
+      inset 0 0.5px 0 0.5px rgba(255, 255, 255, 0.6),
+      inset 0 -1px 1px 0 rgba(0, 0, 0, 0.03),
+      0 10px 30px -10px rgba(0, 0, 0, 0.1);
+  }
+
+  .liquid-button::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-700 pointer-events-none;
+    background: radial-gradient(circle at center, rgba(59, 130, 246, 0.12) 0%, transparent 75%);
+  }
+
+  .liquid-button:hover {
+    @apply scale-[1.02] bg-white/65;
+    box-shadow: 
+      inset 0 0.5px 0 0.5px rgba(255, 255, 255, 0.8),
+      inset 0 -1px 1px 0 rgba(0, 0, 0, 0.01),
+      0 20px 40px -15px rgba(59, 130, 246, 0.18),
+      0 0 25px 2px rgba(59, 130, 246, 0.08);
+  }
+
+  .liquid-button:hover::before {
+    @apply opacity-100;
+  }
+
+  .liquid-button:active {
+    @apply scale-[0.97];
+    transition-duration: 150ms;
+  }
+
+  .liquid-button-text {
+    @apply relative z-10 text-slate-900 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)];
+  }
   
   .custom-scrollbar::-webkit-scrollbar {
     width: 8px;

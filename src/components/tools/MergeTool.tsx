@@ -1,6 +1,6 @@
 /**
  * @fileoverview Merge PDF Tool Component
- * Responsibility: Handle multi-file selection, reordering, and merging logic.
+ * Responsibility: Handle multi-file selection, reordering, and merging logic with Liquid Glass UI.
  * Author: GlassPDF Team
  * License: MIT
  */
@@ -11,7 +11,7 @@ import React, { useState } from 'react';
 import { FileUpload } from './FileUpload';
 import { mergePDFDocuments, triggerDownload, PDFFileMetadata } from '@/lib/pdf-service';
 import { Button } from '@/components/ui/button';
-import { FileText, X, GripVertical, Plus, Info, Loader2 } from 'lucide-react';
+import { FileText, X, GripVertical, Plus, Info, Loader2, Layers } from 'lucide-react';
 import { Reorder, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 
@@ -99,18 +99,25 @@ export const MergeTool: React.FC = () => {
            <Button variant="outline" onClick={() => setFileList([])} className="glass-button h-14 px-8 rounded-[1.5rem] font-black uppercase tracking-widest text-xs flex-1 md:flex-none">
             Reset
            </Button>
-           <Button 
+           <button 
             onClick={onMergeTriggered} 
             disabled={processing} 
-            className="bg-secondary hover:bg-secondary/90 text-white font-black h-14 px-12 rounded-[1.5rem] shadow-2xl transition-all hover:scale-[1.02] flex-1 md:flex-none"
+            className="liquid-button h-14 px-12 rounded-[1.5rem] flex-1 md:flex-none group"
            >
-            {processing ? (
-              <div className="flex items-center">
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                Merging...
-              </div>
-            ) : "Confirm & Merge"}
-          </Button>
+            <span className="liquid-button-text flex items-center font-black uppercase tracking-widest text-xs">
+              {processing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Merging...
+                </>
+              ) : (
+                <>
+                  <Layers className="w-4 h-4 mr-2" />
+                  Confirm & Merge
+                </>
+              )}
+            </span>
+          </button>
         </div>
       </div>
 
