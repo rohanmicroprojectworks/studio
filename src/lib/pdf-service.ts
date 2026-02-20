@@ -1,11 +1,11 @@
 /**
- * @fileoverview PDF Processing Service
- * Responsibility: Core business logic for PDF manipulation using pdf-lib.
+ * @fileoverview Enhanced PDF Processing Service
+ * Responsibility: Core business logic for PDF manipulation, including security and image integration.
  * Author: GlassPDF Team
  * License: MIT
  */
 
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
 /**
  * Interface for PDF file metadata used within the application state.
@@ -19,20 +19,16 @@ export interface PDFFileMetadata {
 
 /**
  * Merges multiple PDF files into a single document.
- * @param files Array of File objects to merge.
- * @returns Uint8Array of the merged PDF.
  */
 export const mergePDFDocuments = async (files: File[]): Promise<Uint8Array> => {
   try {
     const mergedPdf = await PDFDocument.create();
-    
     for (const file of files) {
       const bytes = await file.arrayBuffer();
       const pdf = await PDFDocument.load(bytes);
       const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
       copiedPages.forEach((page) => mergedPdf.addPage(page));
     }
-    
     return await mergedPdf.save();
   } catch (error) {
     console.error('[PDF Service] Merge failed:', error);
@@ -41,10 +37,7 @@ export const mergePDFDocuments = async (files: File[]): Promise<Uint8Array> => {
 };
 
 /**
- * Extracts specific page ranges from a PDF as individual files.
- * @param file The source PDF file.
- * @param ranges Array of start and end page numbers.
- * @returns Array of Uint8Arrays, one for each range.
+ * Extracts specific page ranges from a PDF.
  */
 export const splitPDFDocument = async (
   file: File, 
@@ -58,93 +51,112 @@ export const splitPDFDocument = async (
     for (const range of ranges) {
       const newPdf = await PDFDocument.create();
       const pageCount = sourcePdf.getPageCount();
-      
       const indices: number[] = [];
       for (let i = range.start - 1; i <= range.end - 1; i++) {
-        if (i >= 0 && i < pageCount) {
-          indices.push(i);
-        }
+        if (i >= 0 && i < pageCount) indices.push(i);
       }
-
       if (indices.length > 0) {
         const copiedPages = await newPdf.copyPages(sourcePdf, indices);
         copiedPages.forEach((page) => newPdf.addPage(page));
         results.push(await newPdf.save());
       }
     }
-
     return results;
   } catch (error) {
-    console.error('[PDF Service] Split failed:', error);
     throw new Error('Failed to split PDF document.');
   }
 };
 
 /**
  * Extracts multiple ranges and merges them into a single output file.
- * @param file Source PDF file.
- * @param ranges Ranges to extract.
- * @returns Uint8Array of the merged extraction.
  */
 export const extractAndMergePDFRanges = async (
   file: File,
   ranges: { start: number; end: number }[]
 ): Promise<Uint8Array> => {
-  try {
-    const bytes = await file.arrayBuffer();
-    const sourcePdf = await PDFDocument.load(bytes);
-    const newPdf = await PDFDocument.create();
-
-    for (const range of ranges) {
-      const pageCount = sourcePdf.getPageCount();
-      const indices: number[] = [];
-      for (let i = range.start - 1; i <= range.end - 1; i++) {
-        if (i >= 0 && i < pageCount) {
-          indices.push(i);
-        }
-      }
-      const copiedPages = await newPdf.copyPages(sourcePdf, indices);
-      copiedPages.forEach((page) => newPdf.addPage(page));
+  const bytes = await file.arrayBuffer();
+  const sourcePdf = await PDFDocument.load(bytes);
+  const newPdf = await PDFDocument.create();
+  for (const range of ranges) {
+    const pageCount = sourcePdf.getPageCount();
+    const indices: number[] = [];
+    for (let i = range.start - 1; i <= range.end - 1; i++) {
+      if (i >= 0 && i < pageCount) indices.push(i);
     }
-
-    return await newPdf.save();
-  } catch (error) {
-    console.error('[PDF Service] Extract and merge failed:', error);
-    throw new Error('Failed to process and merge PDF ranges.');
+    const copiedPages = await newPdf.copyPages(sourcePdf, indices);
+    copiedPages.forEach((page) => newPdf.addPage(page));
   }
+  return await newPdf.save();
 };
 
 /**
  * Compresses a PDF file by optimizing internal streams.
- * @param file Source PDF file.
- * @param level Compression intensity.
- * @returns Uint8Array of the compressed PDF.
  */
 export const compressPDFDocument = async (
   file: File, 
   level: 'low' | 'medium' | 'high'
 ): Promise<Uint8Array> => {
-  try {
-    const bytes = await file.arrayBuffer();
-    const pdf = await PDFDocument.load(bytes);
-    
-    return await pdf.save({
-      useObjectStreams: level !== 'low',
-      addDefaultPage: false,
-    });
-  } catch (error) {
-    console.error('[PDF Service] Compression failed:', error);
-    throw new Error('Failed to compress PDF document.');
+  const bytes = await file.arrayBuffer();
+  const pdf = await PDFDocument.load(bytes);
+  return await pdf.save({
+    useObjectStreams: level !== 'low',
+    addDefaultPage: false,
+  });
+};
+
+/**
+ * Protects a PDF with a password.
+ */
+export const protectPDF = async (file: File, password: string): Promise<Uint8Array> => {
+  const bytes = await file.arrayBuffer();
+  const pdf = await PDFDocument.load(bytes);
+  pdf.encrypt({
+    userPassword: password,
+    ownerPassword: password,
+    permissions: {
+      printing: 'highResolution',
+      modifying: true,
+      copying: true,
+    },
+  });
+  return await pdf.save();
+};
+
+/**
+ * Unlocks a protected PDF.
+ */
+export const unlockPDF = async (file: File, password: string): Promise<Uint8Array> => {
+  const bytes = await file.arrayBuffer();
+  const pdf = await PDFDocument.load(bytes, { password });
+  return await pdf.save();
+};
+
+/**
+ * Converts images to a single PDF.
+ */
+export const imagesToPDF = async (files: File[]): Promise<Uint8Array> => {
+  const pdfDoc = await PDFDocument.create();
+  for (const file of files) {
+    const imgBytes = await file.arrayBuffer();
+    let img;
+    if (file.type === 'image/jpeg' || file.type === 'image/jpg') {
+      img = await pdfDoc.embedJpg(imgBytes);
+    } else if (file.type === 'image/png') {
+      img = await pdfDoc.embedPng(imgBytes);
+    } else {
+      continue;
+    }
+    const page = pdfDoc.addPage([img.width, img.height]);
+    page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
   }
+  return await pdfDoc.save();
 };
 
 /**
  * Triggers a browser download for a given byte array.
- * @param data PDF byte data.
- * @param fileName Intended filename.
  */
-export const triggerDownload = (data: Uint8Array, fileName: string) => {
-  const blob = new Blob([data], { type: 'application/pdf' });
+export const triggerDownload = (data: Uint8Array, fileName: string, type: string = 'application/pdf') => {
+  const blob = new Blob([data], { type });
   const url = window.URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;

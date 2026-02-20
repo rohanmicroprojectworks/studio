@@ -11,18 +11,20 @@ import React, { useState, useEffect } from 'react';
 import { MergeTool } from '@/components/tools/MergeTool';
 import { SplitTool } from '@/components/tools/SplitTool';
 import { CompressTool } from '@/components/tools/CompressTool';
-import { ArrowLeft, Layers, Scissors, Minimize2, Github } from 'lucide-react';
+import { ImageConverterTool } from '@/components/tools/ImageConverterTool';
+import { PDFViewerTool } from '@/components/tools/PDFViewerTool';
+import { ProtectTool } from '@/components/tools/ProtectTool';
+import { ArrowLeft, Layers, Scissors, Minimize2, Github, Image as ImageIcon, Eye, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-type ActiveTool = 'merge' | 'split' | 'compress' | null;
+type ActiveTool = 'merge' | 'split' | 'compress' | 'image-converter' | 'pdf-viewer' | 'protect' | null;
 
 export default function PDFWorkspace() {
   const [activeTool, setActiveTool] = useState<ActiveTool>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
-  // Handle Theme Switching with standard DOM class manipulation for Next.js consistency
   useEffect(() => {
     const root = window.document.documentElement;
     if (theme === 'dark') {
@@ -54,6 +56,27 @@ export default function PDFWorkspace() {
       icon: Minimize2, 
       themeColor: 'bg-sky-500 dark:bg-orange-400' 
     },
+    { 
+      id: 'image-converter' as const, 
+      name: 'Image Converter', 
+      description: 'Convert images to PDF or between formats instantly', 
+      icon: ImageIcon, 
+      themeColor: 'bg-emerald-500 dark:bg-teal-500' 
+    },
+    { 
+      id: 'pdf-viewer' as const, 
+      name: 'PDF Viewer', 
+      description: 'Instant local preview with fast navigation and zoom', 
+      icon: Eye, 
+      themeColor: 'bg-purple-500 dark:bg-violet-600' 
+    },
+    { 
+      id: 'protect' as const, 
+      name: 'Security Studio', 
+      description: 'Add password protection or unlock restricted files', 
+      icon: Lock, 
+      themeColor: 'bg-rose-500 dark:bg-pink-600' 
+    },
   ];
 
   const renderActiveWorkspace = () => {
@@ -61,13 +84,15 @@ export default function PDFWorkspace() {
       case 'merge': return <MergeTool />;
       case 'split': return <SplitTool />;
       case 'compress': return <CompressTool />;
+      case 'image-converter': return <ImageConverterTool />;
+      case 'pdf-viewer': return <PDFViewerTool />;
+      case 'protect': return <ProtectTool />;
       default: return null;
     }
   };
 
   return (
     <div className="h-[100dvh] flex flex-col font-body overflow-hidden text-slate-900 dark:text-slate-100 selection:bg-secondary/20 relative bg-transparent">
-      {/* Glass Navigation Bar */}
       <header className="z-50 px-4 md:px-8 h-14 flex justify-between items-center bg-white/20 dark:bg-black/20 backdrop-blur-2xl border-b border-white/20 dark:border-white/10 shrink-0 shadow-sm">
         <div 
           className="flex items-center space-x-3 cursor-pointer group"
@@ -100,7 +125,7 @@ export default function PDFWorkspace() {
 
       <main className={cn(
         "flex-1 relative flex flex-col overflow-hidden p-4 md:p-6 lg:p-8",
-        !activeTool && "items-center justify-center overflow-y-auto"
+        !activeTool && "items-center justify-start overflow-y-auto custom-scrollbar"
       )}>
         <AnimatePresence mode="wait">
           {!activeTool ? (
@@ -110,7 +135,7 @@ export default function PDFWorkspace() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="max-w-6xl w-full text-center space-y-12 py-8"
+              className="max-w-6xl w-full text-center space-y-12 py-16"
             >
               <div className="space-y-4">
                  <motion.h2 
@@ -132,7 +157,7 @@ export default function PDFWorkspace() {
                  </motion.p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 px-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 px-4">
                 {availableTools.map((tool, index) => (
                   <motion.div
                     key={tool.id}
@@ -175,10 +200,7 @@ export default function PDFWorkspace() {
                 </Button>
                 <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-4"></div>
                 <div className="flex items-center space-x-3">
-                   {activeTool === 'merge' && <Layers className="w-5 h-5 text-secondary" />}
-                   {activeTool === 'split' && <Scissors className="w-5 h-5 text-secondary" />}
-                   {activeTool === 'compress' && <Minimize2 className="w-5 h-5 text-secondary" />}
-                   <span className="font-black uppercase tracking-[0.2em] text-secondary text-xs">Workspace</span>
+                   <span className="font-black uppercase tracking-[0.2em] text-secondary text-xs">Workspace / {availableTools.find(t => t.id === activeTool)?.name}</span>
                 </div>
               </div>
 
