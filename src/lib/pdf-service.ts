@@ -5,7 +5,7 @@
  * License: MIT
  */
 
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { PDFDocument } from 'pdf-lib';
 
 /**
  * Interface for PDF file metadata used within the application state.
@@ -90,15 +90,28 @@ export const extractAndMergePDFRanges = async (
 };
 
 /**
- * Compresses a PDF file by optimizing internal streams.
+ * Compresses a PDF file by optimizing internal streams and re-bundling objects.
  */
 export const compressPDFDocument = async (
   file: File, 
   level: 'low' | 'medium' | 'high'
 ): Promise<Uint8Array> => {
   const bytes = await file.arrayBuffer();
-  const pdf = await PDFDocument.load(bytes);
-  return await pdf.save({
+  const sourcePdf = await PDFDocument.load(bytes);
+  
+  // Create a new document and copy pages to deduplicate shared resources
+  const compressedPdf = await PDFDocument.create();
+  const copiedPages = await compressedPdf.copyPages(sourcePdf, sourcePdf.getPageIndices());
+  copiedPages.forEach((page) => compressedPdf.addPage(page));
+
+  // High compression cleans up metadata
+  if (level === 'high') {
+    compressedPdf.setProducer('GlassPDF Engine');
+    compressedPdf.setCreator('GlassPDF Studio');
+  }
+
+  // Use object streams to reduce metadata overhead
+  return await compressedPdf.save({
     useObjectStreams: level !== 'low',
     addDefaultPage: false,
   });
