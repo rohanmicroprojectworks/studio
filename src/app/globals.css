@@ -32,9 +32,9 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground overflow-hidden antialiased;
+    @apply bg-background text-foreground antialiased;
     background: radial-gradient(circle at top left, #FFFFFF 0%, #E0F2FE 50%, #BAE6FD 100%);
-    min-height: 100vh;
+    min-height: 100dvh;
   }
 }
 
@@ -43,7 +43,7 @@
     @apply bg-white/60 backdrop-blur-2xl border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)];
   }
   .glass-card {
-    @apply bg-white/40 backdrop-blur-xl border border-white/50 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] transition-all duration-500 hover:bg-white/60 hover:scale-[1.03] hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)];
+    @apply bg-white/40 backdrop-blur-xl border border-white/50 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] transition-all duration-500 hover:bg-white/60 hover:scale-[1.01] hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)];
   }
   .glass-button {
     @apply bg-white/40 hover:bg-white/80 backdrop-blur-md border border-white/40 text-foreground font-bold transition-all duration-300 shadow-sm active:scale-95;
@@ -60,15 +60,15 @@
   }
 
   .Btn {
-    width: 40px;
-    height: 40px;
+    width: 45px;
+    height: 45px;
     display: flex;
     align-items: center;
     justify-content: center;
     border: none;
     background-color: transparent;
     position: relative;
-    border-radius: 10px;
+    border-radius: 7px;
     cursor: pointer;
     transition: all .3s;
   }
@@ -81,26 +81,26 @@
     justify-content: center;
     background-color: transparent;
     backdrop-filter: blur(0px);
+    letter-spacing: 0.8px;
     border-radius: 10px;
     transition: all .3s;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(156, 156, 156, 0.466);
     z-index: 2;
   }
 
   .BG {
-    @apply absolute inset-0 rounded-[10px] pointer-events-none transition-all duration-500;
-    content: "";
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    @apply absolute inset-0 rounded-xl pointer-events-none transition-all duration-300;
+    background: #181818;
     z-index: 1;
   }
 
   .Btn:hover .BG {
-    transform: rotate(15deg) scale(1.1);
+    transform: rotate(35deg);
+    transform-origin: bottom;
   }
 
   .Btn:hover .svgContainer {
-    background-color: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(8px);
-    border-color: white;
+    background-color: rgba(156, 156, 156, 0.466);
+    backdrop-filter: blur(4px);
   }
 }
