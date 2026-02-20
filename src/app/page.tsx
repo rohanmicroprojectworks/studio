@@ -7,6 +7,7 @@ import { CompressTool } from '@/components/tools/CompressTool';
 import { ArrowLeft, Layers, Scissors, Minimize2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 type Tool = 'merge' | 'split' | 'compress' | null;
 
@@ -47,9 +48,9 @@ export default function GlassPDF() {
   };
 
   return (
-    <div className="min-h-screen relative flex flex-col font-body">
+    <div className="h-screen relative flex flex-col font-body overflow-hidden">
       {/* Navbar / Header */}
-      <header className="z-50 px-8 py-6 flex justify-between items-center bg-white/10 backdrop-blur-md border-b border-white/20">
+      <header className="z-50 px-8 py-4 flex justify-between items-center bg-white/10 backdrop-blur-md border-b border-white/20 shrink-0">
         <div 
           className="flex items-center space-x-4 cursor-pointer"
           onClick={() => setActiveTool(null)}
@@ -70,7 +71,10 @@ export default function GlassPDF() {
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center p-8 overflow-hidden">
+      <main className={cn(
+        "flex-1 flex flex-col p-6 md:p-8 overflow-hidden",
+        !activeTool && "items-center justify-center"
+      )}>
         <AnimatePresence mode="wait">
           {!activeTool ? (
             <motion.div 
@@ -131,13 +135,13 @@ export default function GlassPDF() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="w-full max-w-6xl flex-1 flex flex-col"
+              className="w-full max-w-7xl mx-auto flex-1 flex flex-col min-h-0"
             >
-              <div className="mb-8 flex items-center">
+              <div className="mb-6 flex items-center shrink-0">
                 <Button 
                   variant="ghost" 
                   onClick={() => setActiveTool(null)}
-                  className="mr-4 rounded-full w-12 h-12 p-0 glass-button"
+                  className="mr-4 rounded-full w-10 h-10 p-0 glass-button"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
@@ -150,12 +154,12 @@ export default function GlassPDF() {
                 </div>
               </div>
 
-              <div className="flex-1 glass p-10 rounded-[2.5rem] relative overflow-hidden flex flex-col no-scrollbar">
+              <div className="flex-1 glass p-6 md:p-10 rounded-[2.5rem] relative flex flex-col min-h-0">
                 {/* Decorative background element for the tool area */}
                 <div className="absolute top-0 right-0 -mr-24 -mt-24 w-64 h-64 bg-primary/20 blur-[100px] rounded-full pointer-events-none"></div>
                 <div className="absolute bottom-0 left-0 -ml-24 -mb-24 w-64 h-64 bg-secondary/10 blur-[100px] rounded-full pointer-events-none"></div>
                 
-                <div className="relative z-10 flex-1 overflow-y-auto no-scrollbar">
+                <div className="relative z-10 flex-1 overflow-y-auto pr-2 custom-scrollbar">
                   {renderTool()}
                 </div>
               </div>
@@ -165,7 +169,7 @@ export default function GlassPDF() {
       </main>
 
       {/* Footer */}
-      <footer className="px-8 py-4 flex justify-between items-center text-[10px] text-muted-foreground/60 uppercase tracking-[0.2em]">
+      <footer className="px-8 py-3 flex justify-between items-center text-[10px] text-muted-foreground/60 uppercase tracking-[0.2em] bg-white/5 shrink-0">
         <p>&copy; 2024 GlassPDF - Zero-Upload Local Processing</p>
         <div className="flex space-x-6">
           <span className="hover:text-secondary cursor-pointer">Privacy First</span>

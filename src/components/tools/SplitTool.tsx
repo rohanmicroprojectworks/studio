@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -10,7 +9,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { FileText, Scissors, Plus, X, Eye, Loader2, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import * as pdfjsLib from 'pdfjs-dist';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 // Configure PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
@@ -89,7 +87,6 @@ export const SplitTool: React.FC = () => {
           const buffer = await file.arrayBuffer();
           const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
           setTotalPages(pdf.numPages);
-          // Auto-set the end of the first range to the last page if it's empty
           setRanges([{ start: '1', end: pdf.numPages.toString(), id: '1' }]);
         } catch (e) {
           toast({ variant: "destructive", title: "Error", description: "Could not read PDF metadata." });
@@ -152,7 +149,7 @@ export const SplitTool: React.FC = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="w-full space-y-8 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-4xl font-headline font-black text-secondary-foreground tracking-tight">Split Workspace</h2>
@@ -175,7 +172,7 @@ export const SplitTool: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         {/* File Overview Sidebar */}
-        <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-8">
+        <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-0">
            <div className="glass-card p-8 rounded-[2rem] flex flex-col items-center justify-center space-y-6">
               <div className="p-10 bg-primary/20 rounded-[2.5rem] shadow-inner relative group">
                  <FileText className="w-20 h-20 text-secondary-foreground group-hover:rotate-6 transition-transform" />
