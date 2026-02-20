@@ -66,7 +66,7 @@ export default function PDFWorkspace() {
   };
 
   return (
-    <div className="h-[100dvh] flex flex-col font-body overflow-hidden text-slate-900 dark:text-slate-100 selection:bg-secondary/20">
+    <div className="h-[100dvh] flex flex-col font-body overflow-hidden text-slate-900 dark:text-slate-100 selection:bg-secondary/20 relative bg-transparent">
       {/* Glass Navigation Bar */}
       <header className="z-50 px-4 md:px-8 h-14 flex justify-between items-center bg-white/20 dark:bg-black/20 backdrop-blur-2xl border-b border-white/20 dark:border-white/10 shrink-0 shadow-sm">
         <div 
@@ -102,10 +102,6 @@ export default function PDFWorkspace() {
         "flex-1 relative flex flex-col overflow-hidden p-4 md:p-6 lg:p-8",
         !activeTool && "items-center justify-center overflow-y-auto"
       )}>
-        {/* Dynamic Background Effects */}
-        <div className="fixed top-1/4 left-1/4 w-[20rem] md:w-[40rem] h-[20rem] md:h-[40rem] bg-blue-400/10 dark:bg-orange-400/5 blur-[160px] rounded-full -z-10 animate-pulse pointer-events-none"></div>
-        <div className="fixed bottom-1/4 right-1/4 w-[20rem] md:w-[40rem] h-[20rem] md:h-[40rem] bg-indigo-400/10 dark:bg-amber-400/5 blur-[160px] rounded-full -z-10 animate-pulse pointer-events-none" style={{ animationDelay: '3s' }}></div>
-
         <AnimatePresence mode="wait">
           {!activeTool ? (
             <motion.div 
