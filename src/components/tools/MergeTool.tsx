@@ -1,109 +1,159 @@
+/**
+ * @fileoverview Merge PDF Tool Component
+ * Responsibility: Handle multi-file selection, reordering, and merging logic.
+ * Author: GlassPDF Team
+ * License: MIT
+ */
 
 "use client";
 
 import React, { useState } from 'react';
 import { FileUpload } from './FileUpload';
-import { mergePDFs, downloadBlob, PDFFile } from '@/lib/pdf-service';
+import { mergePDFDocuments, triggerDownload, PDFFileMetadata } from '@/lib/pdf-service';
 import { Button } from '@/components/ui/button';
-import { FileText, X, GripVertical, Plus } from 'lucide-react';
+import { FileText, X, GripVertical, Plus, Info } from 'lucide-react';
 import { Reorder, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 
 export const MergeTool: React.FC = () => {
-  const [files, setFiles] = useState<PDFFile[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [fileList, setFileList] = useState<PDFFileMetadata[]>([]);
+  const [processing, setProcessing] = useState(false);
   const { toast } = useToast();
 
-  const handleFilesSelected = (newFiles: File[]) => {
-    const formatted = newFiles.map(f => ({
-      file: f,
-      id: Math.random().toString(36).substr(2, 9),
-      name: f.name,
-      size: f.size
+  /**
+   * Processes selected files and adds them to the reorderable list.
+   */
+  const onFilesAdded = (selectedFiles: File[]) => {
+    const newItems = selectedFiles.map(file => ({
+      file,
+      id: crypto.randomUUID(),
+      name: file.name,
+      size: file.size
     }));
-    setFiles(prev => [...prev, ...formatted]);
+    setFileList(prev => [...prev, ...newItems]);
   };
 
-  const removeFile = (id: string) => {
-    setFiles(prev => prev.filter(f => f.id !== id));
+  /**
+   * Removes a specific file from the merge queue.
+   */
+  const onFileRemoved = (id: string) => {
+    setFileList(prev => prev.filter(item => item.id !== id));
   };
 
-  const handleMerge = async () => {
-    if (files.length < 2) {
-      toast({ title: "Error", description: "Please add at least 2 PDF files to merge." });
+  /**
+   * Triggers the merge process and browser download.
+   */
+  const onMergeTriggered = async () => {
+    if (fileList.length < 2) {
+      toast({ 
+        variant: "destructive",
+        title: "Incomplete Queue", 
+        description: "Please add at least 2 PDF files to perform a merge." 
+      });
       return;
     }
-    setIsProcessing(true);
+
+    setProcessing(true);
     try {
-      const result = await mergePDFs(files.map(f => f.file));
-      downloadBlob(result, "merged-glasspdf.pdf");
-      toast({ title: "Success", description: "PDFs merged successfully!" });
+      const mergedBytes = await mergePDFDocuments(fileList.map(item => item.file));
+      triggerDownload(mergedBytes, "merged_glasspdf.pdf");
+      toast({ title: "Success", description: "Your PDF files have been merged successfully." });
     } catch (err) {
-      toast({ title: "Error", description: "Failed to merge PDFs." });
+      toast({ 
+        variant: "destructive",
+        title: "Operation Failed", 
+        description: "An error occurred during the merge process. Ensure files are valid PDFs." 
+      });
     } finally {
-      setIsProcessing(false);
+      setProcessing(false);
     }
   };
 
-  if (files.length === 0) {
-    return <FileUpload onFilesSelected={handleFilesSelected} multiple />;
+  if (fileList.length === 0) {
+    return (
+      <div className="max-w-4xl mx-auto w-full">
+        <FileUpload onFilesSelected={onFilesAdded} multiple />
+        <div className="mt-12 p-8 glass-card rounded-[2.5rem] bg-secondary/5 border-secondary/10 flex items-start space-x-6">
+           <div className="p-3 bg-secondary/20 rounded-2xl">
+             <Info className="w-6 h-6 text-secondary" />
+           </div>
+           <div className="space-y-2">
+             <h4 className="font-black text-slate-900 uppercase tracking-widest text-sm">Pro Tip</h4>
+             <p className="text-slate-500 font-medium leading-relaxed">
+               You can select multiple files at once using the file browser or by dragging them directly. Once selected, you'll be able to reorder them to your liking.
+             </p>
+           </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="flex flex-col h-full space-y-6 max-w-4xl mx-auto">
-      <div className="flex justify-between items-center">
+    <div className="flex flex-col h-full space-y-8 max-w-5xl mx-auto w-full">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h2 className="text-2xl font-headline font-bold">Merge PDF</h2>
-          <p className="text-muted-foreground">Rearrange files by dragging them before merging.</p>
+          <h2 className="text-4xl font-black tracking-tight text-slate-900">Merge Queue</h2>
+          <p className="text-slate-500 font-semibold mt-1">Drag handles to rearrange your documents before merging.</p>
         </div>
-        <div className="flex space-x-2">
-           <Button variant="outline" onClick={() => setFiles([])} className="glass-button">Clear All</Button>
-           <Button onClick={handleMerge} disabled={isProcessing} className="bg-secondary hover:bg-secondary/80 text-white font-semibold px-8 rounded-full shadow-lg">
-            {isProcessing ? "Merging..." : "Merge PDF"}
+        <div className="flex space-x-4 w-full md:w-auto">
+           <Button variant="outline" onClick={() => setFileList([])} className="glass-button h-14 px-8 rounded-[1.5rem] font-black uppercase tracking-widest text-xs flex-1 md:flex-none">
+            Reset
+           </Button>
+           <Button 
+            onClick={onMergeTriggered} 
+            disabled={processing} 
+            className="bg-secondary hover:bg-secondary/90 text-white font-black h-14 px-12 rounded-[1.5rem] shadow-2xl transition-all hover:scale-[1.02] flex-1 md:flex-none"
+           >
+            {processing ? "Merging..." : "Confirm & Merge"}
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto no-scrollbar pb-24">
-        <Reorder.Group axis="y" values={files} onReorder={setFiles} className="space-y-3">
+      <div className="flex-1 overflow-y-auto custom-scrollbar pb-32">
+        <Reorder.Group axis="y" values={fileList} onReorder={setFileList} className="space-y-4">
           <AnimatePresence mode="popLayout">
-            {files.map((file) => (
+            {fileList.map((item) => (
               <Reorder.Item
-                key={file.id}
-                value={file}
-                initial={{ opacity: 0, y: 10 }}
+                key={item.id}
+                value={item}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="glass-card p-4 rounded-xl flex items-center justify-between group"
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className="glass-card p-6 rounded-[2rem] flex items-center justify-between group border-white/40 shadow-xl hover:bg-white/60"
               >
-                <div className="flex items-center space-x-4">
-                  <div className="cursor-grab active:cursor-grabbing text-muted-foreground group-hover:text-foreground">
-                    <GripVertical className="w-5 h-5" />
+                <div className="flex items-center space-x-6">
+                  <div className="cursor-grab active:cursor-grabbing text-slate-300 group-hover:text-slate-900 transition-colors p-2">
+                    <GripVertical className="w-6 h-6" />
                   </div>
-                  <div className="p-2 bg-primary/20 rounded-lg">
-                    <FileText className="w-6 h-6 text-secondary-foreground" />
+                  <div className="p-4 bg-primary/20 rounded-2xl shadow-inner">
+                    <FileText className="w-8 h-8 text-secondary" />
                   </div>
-                  <div>
-                    <p className="font-medium truncate max-w-xs">{file.name}</p>
-                    <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                  <div className="min-w-0">
+                    <p className="font-black text-xl truncate max-w-md text-slate-900">{item.name}</p>
+                    <p className="text-sm text-slate-500 font-bold uppercase tracking-widest mt-0.5">{(item.size / 1024 / 1024).toFixed(2)} MB</p>
                   </div>
                 </div>
                 <button 
-                  onClick={() => removeFile(file.id)}
-                  className="p-2 hover:bg-destructive/10 hover:text-destructive rounded-full transition-colors"
+                  onClick={() => onFileRemoved(item.id)}
+                  className="p-4 hover:bg-destructive/10 text-slate-300 hover:text-destructive rounded-2xl transition-all duration-300 group-hover:scale-110"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-6 h-6" />
                 </button>
               </Reorder.Item>
             ))}
           </AnimatePresence>
         </Reorder.Group>
         
-        <div className="mt-4">
-           <label className="flex items-center justify-center p-4 border-2 border-dashed border-white/40 rounded-xl cursor-pointer hover:bg-white/10 glass transition-all group">
-             <input type="file" multiple accept=".pdf" className="hidden" onChange={(e) => handleFilesSelected(e.target.files ? Array.from(e.target.files) : [])} />
-             <Plus className="w-5 h-5 mr-2 text-muted-foreground group-hover:text-foreground" />
-             <span className="text-muted-foreground group-hover:text-foreground">Add more files</span>
+        <div className="mt-8">
+           <label className="flex items-center justify-center p-8 border-2 border-dashed border-white/60 rounded-[2rem] cursor-pointer hover:bg-white/40 glass transition-all duration-500 group">
+             <input type="file" multiple accept=".pdf" className="hidden" onChange={(e) => onFilesAdded(e.target.files ? Array.from(e.target.files) : [])} />
+             <div className="flex flex-col items-center space-y-3">
+                <div className="p-3 bg-white/50 rounded-full group-hover:scale-110 transition-transform">
+                  <Plus className="w-6 h-6 text-slate-600" />
+                </div>
+                <span className="text-slate-500 font-black uppercase tracking-widest text-xs">Append more documents</span>
+             </div>
            </label>
         </div>
       </div>

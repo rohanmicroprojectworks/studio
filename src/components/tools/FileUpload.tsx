@@ -1,9 +1,16 @@
+/**
+ * @fileoverview Reusable File Upload Component
+ * Responsibility: Handle drag-and-drop and input-based file selection with local processing hints.
+ * Author: GlassPDF Team
+ * License: MIT
+ */
 
 "use client";
 
-import React, { useCallback } from 'react';
-import { Upload, FileText } from 'lucide-react';
+import React, { useCallback, useState } from 'react';
+import { Upload, FileText, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface FileUploadProps {
   onFilesSelected: (files: File[]) => void;
@@ -16,28 +23,28 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   multiple = false,
   className 
 }) => {
-  const [isDragging, setIsDragging] = React.useState(false);
+  const [dragActive, setDragActive] = useState(false);
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
+  const onDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(true);
+    setDragActive(true);
   }, []);
 
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
+  const onDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(false);
+    setDragActive(false);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(false);
+    setDragActive(false);
     const files = Array.from(e.dataTransfer.files).filter(f => f.type === 'application/pdf');
     if (files.length > 0) {
       onFilesSelected(multiple ? files : [files[0]]);
     }
   }, [multiple, onFilesSelected]);
 
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files ? Array.from(e.target.files) : [];
     if (files.length > 0) {
       onFilesSelected(files);
@@ -47,31 +54,62 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   return (
     <div
       className={cn(
-        "relative flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-2xl transition-all duration-300",
-        isDragging ? "border-primary bg-primary/10 scale-[1.01]" : "border-white/40 bg-white/10",
-        "glass",
+        "relative flex flex-col items-center justify-center w-full h-80 border-4 border-dashed rounded-[3rem] transition-all duration-700 ease-[0.16,1,0.3,1]",
+        dragActive 
+          ? "border-secondary bg-secondary/5 scale-[1.02] shadow-[0_0_80px_rgba(59,130,246,0.1)]" 
+          : "border-white/40 bg-white/10 hover:border-white/60 hover:bg-white/20",
+        "glass shadow-2xl overflow-hidden",
         className
       )}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
     >
       <input
         type="file"
         multiple={multiple}
         accept=".pdf"
-        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-        onChange={handleFileInput}
+        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+        onChange={onInputChange}
       />
-      <div className="flex flex-col items-center space-y-4 pointer-events-none">
-        <div className="p-4 rounded-full bg-primary/20">
-          <Upload className="w-8 h-8 text-secondary-foreground" />
-        </div>
-        <div className="text-center">
-          <p className="text-xl font-semibold font-headline">Drop your PDFs here</p>
-          <p className="text-sm text-muted-foreground">or click to browse files from your computer</p>
-        </div>
-      </div>
+      
+      <AnimatePresence mode="wait">
+        <motion.div 
+          key={dragActive ? 'active' : 'idle'}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 1.1 }}
+          className="flex flex-col items-center space-y-8 pointer-events-none z-10"
+        >
+          <div className={cn(
+            "p-8 rounded-[2.5rem] transition-all duration-500 shadow-inner",
+            dragActive ? "bg-secondary text-white scale-110" : "bg-white/40 text-slate-600"
+          )}>
+            {dragActive ? <CheckCircle2 className="w-12 h-12" /> : <Upload className="w-12 h-12" />}
+          </div>
+          
+          <div className="text-center space-y-3 px-8">
+            <p className="text-4xl font-black text-slate-900 tracking-tight">
+              {dragActive ? "Drop to Process" : "Start your Session"}
+            </p>
+            <p className="text-lg text-slate-500 font-bold max-w-md mx-auto leading-tight">
+              {dragActive 
+                ? "Release files to begin instant local extraction." 
+                : "Select PDF files from your device to begin secure browser-native processing."
+              }
+            </p>
+          </div>
+          
+          <div className="flex items-center space-x-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] bg-white/50 px-6 py-2 rounded-full border border-white/60 shadow-sm">
+            <span>Secure Sandbox</span>
+            <span className="text-emerald-500">•</span>
+            <span>Local Engine</span>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+      
+      {/* Background Decorative Element */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-secondary/5 to-transparent pointer-events-none -z-10"></div>
     </div>
   );
 };
