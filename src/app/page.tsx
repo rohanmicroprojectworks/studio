@@ -7,11 +7,11 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MergeTool } from '@/components/tools/MergeTool';
 import { SplitTool } from '@/components/tools/SplitTool';
 import { CompressTool } from '@/components/tools/CompressTool';
-import { ArrowLeft, Layers, Scissors, Minimize2, ShieldCheck, Github } from 'lucide-react';
+import { ArrowLeft, Layers, Scissors, Minimize2, Github } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -20,6 +20,17 @@ type ActiveTool = 'merge' | 'split' | 'compress' | null;
 
 export default function PDFWorkspace() {
   const [activeTool, setActiveTool] = useState<ActiveTool>(null);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  // Handle Theme Switching with standard DOM class manipulation for Next.js consistency
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [theme]);
 
   const availableTools = [
     { 
@@ -27,21 +38,21 @@ export default function PDFWorkspace() {
       name: 'Merge PDF', 
       description: 'Combine multiple files into one seamless document', 
       icon: Layers, 
-      themeColor: 'bg-blue-500' 
+      themeColor: 'bg-blue-500 dark:bg-orange-500' 
     },
     { 
       id: 'split' as const, 
       name: 'Split PDF', 
       description: 'Extract ranges or separate pages with visual precision', 
       icon: Scissors, 
-      themeColor: 'bg-indigo-500' 
+      themeColor: 'bg-indigo-500 dark:bg-amber-600' 
     },
     { 
       id: 'compress' as const, 
       name: 'Compress PDF', 
       description: 'Reduce size while keeping crystal clear quality', 
       icon: Minimize2, 
-      themeColor: 'bg-sky-500' 
+      themeColor: 'bg-sky-500 dark:bg-orange-400' 
     },
   ];
 
@@ -55,9 +66,9 @@ export default function PDFWorkspace() {
   };
 
   return (
-    <div className="h-[100dvh] flex flex-col font-body overflow-hidden text-slate-900 selection:bg-secondary/20">
+    <div className="h-[100dvh] flex flex-col font-body overflow-hidden text-slate-900 dark:text-slate-100 selection:bg-secondary/20">
       {/* Glass Navigation Bar */}
-      <header className="z-50 px-4 md:px-8 h-16 flex justify-between items-center bg-white/20 backdrop-blur-2xl border-b border-white/20 shrink-0 shadow-sm">
+      <header className="z-50 px-4 md:px-8 h-14 flex justify-between items-center bg-white/20 dark:bg-black/20 backdrop-blur-2xl border-b border-white/20 dark:border-white/10 shrink-0 shadow-sm">
         <div 
           className="flex items-center space-x-3 cursor-pointer group"
           onClick={() => setActiveTool(null)}
@@ -68,16 +79,21 @@ export default function PDFWorkspace() {
             </div>
             <div className="BG"></div>
           </div>
-          <h1 className="text-lg md:text-xl font-black tracking-tighter text-slate-900 group-hover:text-secondary transition-all duration-300">GlassPDF</h1>
+          <h1 className="text-lg md:text-xl font-black tracking-tighter text-slate-900 dark:text-white group-hover:text-secondary transition-all duration-300">GlassPDF</h1>
         </div>
         
-        <nav className="flex items-center space-x-4">
-          <div className="hidden sm:flex items-center px-4 py-1.5 rounded-full bg-slate-900/5 border border-slate-900/10 text-[10px] font-bold tracking-widest text-slate-500">
-            <ShieldCheck className="w-3 h-3 mr-2 text-emerald-500" />
-            SECURE • BROWSER-ONLY
+        <nav className="flex items-center space-x-6">
+          <div className="flex items-center">
+            <input 
+              type="checkbox" 
+              className="theme-checkbox" 
+              checked={theme === 'dark'}
+              onChange={(e) => setTheme(e.target.checked ? 'dark' : 'light')}
+              aria-label="Toggle theme"
+            />
           </div>
-          <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/40">
-            <Github className="w-5 h-5 text-slate-600" />
+          <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/40 dark:hover:bg-white/10">
+            <Github className="w-5 h-5 text-slate-600 dark:text-slate-400" />
           </Button>
         </nav>
       </header>
@@ -87,8 +103,8 @@ export default function PDFWorkspace() {
         !activeTool && "items-center justify-center overflow-y-auto"
       )}>
         {/* Dynamic Background Effects */}
-        <div className="fixed top-1/4 left-1/4 w-[20rem] md:w-[40rem] h-[20rem] md:h-[40rem] bg-blue-400/10 blur-[160px] rounded-full -z-10 animate-pulse pointer-events-none"></div>
-        <div className="fixed bottom-1/4 right-1/4 w-[20rem] md:w-[40rem] h-[20rem] md:h-[40rem] bg-indigo-400/10 blur-[160px] rounded-full -z-10 animate-pulse pointer-events-none" style={{ animationDelay: '3s' }}></div>
+        <div className="fixed top-1/4 left-1/4 w-[20rem] md:w-[40rem] h-[20rem] md:h-[40rem] bg-blue-400/10 dark:bg-orange-400/5 blur-[160px] rounded-full -z-10 animate-pulse pointer-events-none"></div>
+        <div className="fixed bottom-1/4 right-1/4 w-[20rem] md:w-[40rem] h-[20rem] md:h-[40rem] bg-indigo-400/10 dark:bg-amber-400/5 blur-[160px] rounded-full -z-10 animate-pulse pointer-events-none" style={{ animationDelay: '3s' }}></div>
 
         <AnimatePresence mode="wait">
           {!activeTool ? (
@@ -105,16 +121,16 @@ export default function PDFWorkspace() {
                    initial={{ opacity: 0, y: 10 }}
                    animate={{ opacity: 1, y: 0 }}
                    transition={{ delay: 0.1, duration: 0.6 }}
-                   className="text-4xl sm:text-6xl md:text-8xl font-black text-slate-900 tracking-tight leading-tight"
+                   className="text-4xl sm:text-6xl md:text-8xl font-black text-slate-900 dark:text-white tracking-tight leading-tight"
                  >
                    The liquid <br/>
-                   <span className="text-secondary bg-clip-text text-transparent bg-gradient-to-r from-secondary to-indigo-600">PDF Studio.</span>
+                   <span className="text-secondary bg-clip-text text-transparent bg-gradient-to-r from-secondary to-indigo-600 dark:from-orange-400 dark:to-amber-600">PDF Studio.</span>
                  </motion.h2>
                  <motion.p 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.3 }}
-                    className="text-lg md:text-xl text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed px-4"
+                    className="text-lg md:text-xl text-slate-500 dark:text-slate-400 font-medium max-w-2xl mx-auto leading-relaxed px-4"
                  >
                    Professional browser-native tools for your documents. <br className="hidden md:block"/> No uploads, no servers, just pure client-side magic.
                  </motion.p>
@@ -134,10 +150,10 @@ export default function PDFWorkspace() {
                       <tool.icon className="w-8 h-8 md:w-10 md:h-10 text-white" />
                     </div>
                     <div className="space-y-2">
-                      <h3 className="text-2xl font-black text-slate-900">{tool.name}</h3>
-                      <p className="text-sm text-slate-500 font-semibold leading-snug">{tool.description}</p>
+                      <h3 className="text-2xl font-black text-slate-900 dark:text-white">{tool.name}</h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 font-semibold leading-snug">{tool.description}</p>
                     </div>
-                    <Button variant="outline" className="rounded-full px-8 h-10 glass-button text-sm font-black border-white/60">
+                    <Button variant="outline" className="rounded-full px-8 h-10 glass-button text-sm font-black border-white/60 dark:border-white/10">
                       Open Tool
                     </Button>
                   </motion.div>
@@ -157,11 +173,11 @@ export default function PDFWorkspace() {
                 <Button 
                   variant="ghost" 
                   onClick={() => setActiveTool(null)}
-                  className="rounded-2xl w-10 h-10 p-0 glass-button hover:bg-white/80 shadow-md border-white/40"
+                  className="rounded-2xl w-10 h-10 p-0 glass-button hover:bg-white/80 dark:hover:bg-white/20 shadow-md border-white/40 dark:border-white/10"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
-                <div className="h-6 w-px bg-slate-300 mx-4"></div>
+                <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-4"></div>
                 <div className="flex items-center space-x-3">
                    {activeTool === 'merge' && <Layers className="w-5 h-5 text-secondary" />}
                    {activeTool === 'split' && <Scissors className="w-5 h-5 text-secondary" />}
@@ -170,7 +186,7 @@ export default function PDFWorkspace() {
                 </div>
               </div>
 
-              <div className="flex-1 glass p-4 md:p-8 rounded-[2rem] md:rounded-[3rem] relative flex flex-col min-h-0 border-white/60 shadow-2xl overflow-hidden">
+              <div className="flex-1 glass p-4 md:p-8 rounded-[2rem] md:rounded-[3rem] relative flex flex-col min-h-0 border-white/60 dark:border-white/10 shadow-2xl overflow-hidden">
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
                   {renderActiveWorkspace()}
                 </div>
