@@ -228,56 +228,95 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
             initial={{ y: -50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -50, opacity: 0 }}
-            className="absolute top-8 left-1/2 -translate-x-1/2 z-50 flex items-center space-x-3"
+            className="absolute top-8 left-0 w-full px-8 z-50 flex items-center justify-between"
           >
-            {/* Liquid Quick Actions Hub */}
-            <div className="relative group">
-              <div className="h-14 w-14 glass flex items-center justify-center rounded-full cursor-pointer hover:scale-110 transition-all duration-500 border-white/40 shadow-2xl">
-                <MoreVertical className="w-6 h-6 text-slate-900 dark:text-white" />
-              </div>
-              
-              {/* Expansion Menu */}
-              <div className="absolute top-0 left-0 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-500 pt-16 -translate-x-1/2 left-1/2">
-                <div className="glass p-3 rounded-[2rem] flex items-center space-x-2 border-white/30 dark:border-white/10 shadow-2xl min-w-max backdrop-blur-3xl">
-                  <Button variant="ghost" size="icon" onClick={() => onExit?.()} className="h-10 w-10 rounded-full hover:bg-white/40"><ArrowLeft className="w-4 h-4" /></Button>
-                  <Button variant="ghost" size="icon" onClick={() => setShowSearchInput(!showSearchInput)} className={cn("h-10 w-10 rounded-full", showSearchInput && "bg-secondary/20")}><Search className="w-4 h-4" /></Button>
-                  <div className="h-6 w-px bg-white/20 mx-2"></div>
-                  <Button variant="ghost" className="h-10 px-4 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center" onClick={() => quickSwitch('merge')}><Layers className="w-3.5 h-3.5 mr-2" /> Merge</Button>
-                  <Button variant="ghost" className="h-10 px-4 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center" onClick={() => quickSwitch('split')}><Scissors className="w-3.5 h-3.5 mr-2" /> Split</Button>
-                  <Button variant="ghost" className="h-10 px-4 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center" onClick={() => quickSwitch('compress')}><Minimize2 className="w-3.5 h-3.5 mr-2" /> Compress</Button>
-                  <Button variant="ghost" className="h-10 px-4 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center" onClick={() => quickSwitch('protect')}><Lock className="w-3.5 h-3.5 mr-2" /> Protect</Button>
-                  <div className="h-6 w-px bg-white/20 mx-2"></div>
-                  <Button variant="ghost" size="icon" onClick={() => setShowThumbnails(!showThumbnails)} className={cn("h-10 w-10 rounded-full", showThumbnails && "text-secondary")}><SidebarIcon className="w-4 h-4" /></Button>
-                  <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="h-10 w-10 rounded-full">{isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}</Button>
-                </div>
-              </div>
+            {/* Top Left Navigation Group */}
+            <div className="flex items-center space-x-3">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => onExit?.()} 
+                className="h-14 w-14 rounded-full glass hover:bg-white/40 border-white/40 shadow-2xl"
+              >
+                <ArrowLeft className="w-6 h-6 text-slate-900 dark:text-white" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setShowThumbnails(!showThumbnails)} 
+                className={cn(
+                  "h-14 w-14 rounded-full glass hover:bg-white/40 border-white/40 shadow-2xl",
+                  showThumbnails && "text-secondary"
+                )}
+              >
+                <SidebarIcon className="w-6 h-6" />
+              </Button>
             </div>
 
-            {/* Adaptive Search Bar */}
-            <AnimatePresence>
-              {showSearchInput && (
-                <motion.div 
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: 300, opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
-                  className="glass h-14 rounded-full flex items-center px-4 border-white/40 overflow-hidden"
-                >
-                  <Input 
-                    placeholder="Search text..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="bg-transparent border-none focus:ring-0 text-sm font-bold placeholder:text-slate-400"
-                  />
-                  <div className="flex items-center space-x-1 ml-2">
-                    {searchResults.length > 0 && <span className="text-[9px] font-black text-slate-500 mr-2">{currentSearchIndex + 1}/{searchResults.length}</span>}
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={handleSearch} disabled={isSearching}>
-                      {isSearching ? <Loader2 className="w-3 h-3 animate-spin" /> : <Search className="w-3 h-3" />}
+            {/* Top Right Actions Group */}
+            <div className="flex items-center space-x-3">
+              {/* Adaptive Search Bar (Appears when toggled) */}
+              <AnimatePresence>
+                {showSearchInput && (
+                  <motion.div 
+                    initial={{ width: 0, opacity: 0 }}
+                    animate={{ width: 300, opacity: 1 }}
+                    exit={{ width: 0, opacity: 0 }}
+                    className="glass h-14 rounded-full flex items-center px-4 border-white/40 overflow-hidden shadow-2xl mr-3"
+                  >
+                    <Input 
+                      placeholder="Search text..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                      className="bg-transparent border-none focus:ring-0 text-sm font-bold placeholder:text-slate-400"
+                    />
+                    <div className="flex items-center space-x-1 ml-2">
+                      {searchResults.length > 0 && <span className="text-[9px] font-black text-slate-500 mr-2">{currentSearchIndex + 1}/{searchResults.length}</span>}
+                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={handleSearch} disabled={isSearching}>
+                        {isSearching ? <Loader2 className="w-3 h-3 animate-spin" /> : <Search className="w-3 h-3" />}
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Liquid Quick Actions Hub */}
+              <div className="relative group">
+                <div className="h-14 w-14 glass flex items-center justify-center rounded-full cursor-pointer hover:scale-110 transition-all duration-500 border-white/40 shadow-2xl">
+                  <MoreVertical className="w-6 h-6 text-slate-900 dark:text-white" />
+                </div>
+                
+                {/* Expansion Menu */}
+                <div className="absolute top-0 right-0 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-500 pt-16 -translate-x-1/2 left-1/2">
+                  <div className="glass p-3 rounded-[2rem] flex items-center space-x-2 border-white/30 dark:border-white/10 shadow-2xl min-w-max backdrop-blur-3xl">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => setShowSearchInput(!showSearchInput)} 
+                      className={cn("h-10 w-10 rounded-full", showSearchInput && "bg-secondary/20")}
+                    >
+                      <Search className="w-4 h-4" />
                     </Button>
+                    <div className="h-6 w-px bg-white/20 mx-2"></div>
+                    <Button variant="ghost" className="h-10 px-4 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center" onClick={() => quickSwitch('merge')}><Layers className="w-3.5 h-3.5 mr-2" /> Merge</Button>
+                    <Button variant="ghost" className="h-10 px-4 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center" onClick={() => quickSwitch('split')}><Scissors className="w-3.5 h-3.5 mr-2" /> Split</Button>
+                    <Button variant="ghost" className="h-10 px-4 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center" onClick={() => quickSwitch('compress')}><Minimize2 className="w-3.5 h-3.5 mr-2" /> Compress</Button>
+                    <Button variant="ghost" className="h-10 px-4 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center" onClick={() => quickSwitch('protect')}><Lock className="w-3.5 h-3.5 mr-2" /> Protect</Button>
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                </div>
+              </div>
+
+              {/* Fullscreen Toggle */}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={toggleFullscreen} 
+                className="h-14 w-14 rounded-full glass hover:bg-white/40 border-white/40 shadow-2xl"
+              >
+                {isFullscreen ? <Minimize className="w-6 h-6" /> : <Maximize className="w-6 h-6" />}
+              </Button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
