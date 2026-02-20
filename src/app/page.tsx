@@ -18,23 +18,23 @@ export default function GlassPDF() {
     { 
       id: 'merge' as const, 
       name: 'Merge PDF', 
-      desc: 'Combine multiple PDF files into one easily', 
+      desc: 'Combine multiple files into one seamless document', 
       icon: Layers, 
-      color: 'bg-blue-400' 
+      color: 'bg-blue-500' 
     },
     { 
       id: 'split' as const, 
       name: 'Split PDF', 
-      desc: 'Separate one page or whole ranges into individual PDFs', 
+      desc: 'Extract ranges or separate pages with precision', 
       icon: Scissors, 
-      color: 'bg-indigo-400' 
+      color: 'bg-indigo-500' 
     },
     { 
       id: 'compress' as const, 
       name: 'Compress PDF', 
-      desc: 'Reduce file size while keeping visual quality', 
+      desc: 'Reduce size while keeping crystal clear quality', 
       icon: Minimize2, 
-      color: 'bg-sky-400' 
+      color: 'bg-sky-500' 
     },
   ];
 
@@ -49,79 +49,83 @@ export default function GlassPDF() {
 
   return (
     <div className="h-screen relative flex flex-col font-body overflow-hidden">
-      {/* Navbar / Header */}
-      <header className="z-50 px-8 py-2 flex justify-between items-center bg-white/10 backdrop-blur-md border-b border-white/20 shrink-0">
+      {/* Navbar - Reduced height and improved contrast */}
+      <header className="z-50 px-6 h-14 flex justify-between items-center bg-white/20 backdrop-blur-xl border-b border-white/30 shrink-0">
         <div 
-          className="flex items-center space-x-4 cursor-pointer"
+          className="flex items-center space-x-3 cursor-pointer group"
           onClick={() => setActiveTool(null)}
         >
           <button className="Btn">
             <div className="svgContainer">
-              <span className="text-white font-black text-xl">G</span>
+              <span className="text-white font-black text-lg">G</span>
             </div>
             <div className="BG"></div>
           </button>
-          <h1 className="text-xl font-headline font-black tracking-tight text-secondary-foreground">GlassPDF</h1>
+          <h1 className="text-lg font-black tracking-tight text-slate-900 group-hover:text-secondary transition-colors">GlassPDF</h1>
         </div>
-        <div className="flex items-center space-x-4">
-          <Button variant="ghost" className="text-xs text-muted-foreground hover:text-foreground">About</Button>
-          <Button variant="ghost" className="text-xs text-muted-foreground hover:text-foreground">Contact</Button>
+        <div className="flex items-center space-x-2">
+          <Button variant="ghost" className="text-xs font-bold text-slate-600 hover:text-slate-900">Support</Button>
+          <Button variant="ghost" className="text-xs font-bold text-slate-600 hover:text-slate-900">Privacy</Button>
         </div>
       </header>
 
       <main className={cn(
-        "flex-1 flex flex-col p-6 md:p-8 overflow-hidden",
+        "flex-1 flex flex-col p-6 md:p-10 overflow-hidden relative",
         !activeTool && "items-center justify-center"
       )}>
+        {/* Background Decorative Blobs */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400/20 blur-[120px] rounded-full -z-10 animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-400/20 blur-[120px] rounded-full -z-10 animate-pulse" style={{ animationDelay: '2s' }}></div>
+
         <AnimatePresence mode="wait">
           {!activeTool ? (
             <motion.div 
               key="home"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.05 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className="max-w-6xl w-full"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              className="max-w-6xl w-full text-center"
             >
-              <div className="text-center mb-16 space-y-4">
+              <div className="mb-12 space-y-4">
                  <motion.h2 
-                   initial={{ y: 20, opacity: 0 }}
-                   animate={{ y: 0, opacity: 1 }}
-                   transition={{ delay: 0.2 }}
-                   className="text-6xl font-headline font-black text-secondary-foreground leading-tight"
+                   initial={{ opacity: 0, scale: 0.9 }}
+                   animate={{ opacity: 1, scale: 1 }}
+                   transition={{ delay: 0.2, duration: 0.8 }}
+                   className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight leading-none"
                  >
-                   Simplified PDF workflow.<br/>
-                   <span className="text-secondary/80">Beautifully fast.</span>
+                   Crystal clear <br/>
+                   <span className="text-secondary">PDF Workspace.</span>
                  </motion.h2>
                  <motion.p 
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className="text-xl text-muted-foreground max-w-2xl mx-auto"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className="text-lg md:text-xl text-slate-600 font-medium max-w-2xl mx-auto"
                  >
-                   The world's most elegant PDF toolkit, processed entirely locally for your privacy.
+                   Elegant tools for your documents, processed entirely in your browser for absolute privacy.
                  </motion.p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {tools.map((tool, index) => (
                   <motion.div
                     key={tool.id}
-                    initial={{ y: 20, opacity: 0 }}
+                    initial={{ y: 30, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.4 + (index * 0.1) }}
-                    className="glass-card p-10 rounded-3xl cursor-pointer group flex flex-col items-center text-center space-y-6"
+                    transition={{ delay: 0.5 + (index * 0.1), duration: 0.7 }}
+                    className="glass-card p-10 rounded-[2.5rem] cursor-pointer group flex flex-col items-center text-center space-y-6"
                     onClick={() => setActiveTool(tool.id)}
                   >
-                    <div className={`${tool.color} p-6 rounded-2xl shadow-xl group-hover:scale-110 transition-transform duration-500`}>
+                    <div className={cn(tool.color, "p-6 rounded-3xl shadow-2xl group-hover:rotate-6 group-hover:scale-110 transition-all duration-500")}>
                       <tool.icon className="w-10 h-10 text-white" />
                     </div>
                     <div className="space-y-2">
-                      <h3 className="text-2xl font-headline font-bold text-foreground">{tool.name}</h3>
-                      <p className="text-muted-foreground text-sm px-4">{tool.desc}</p>
+                      <h3 className="text-2xl font-bold text-slate-900">{tool.name}</h3>
+                      <p className="text-slate-500 font-medium text-sm leading-relaxed">{tool.desc}</p>
                     </div>
-                    <div className="pt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="outline" className="rounded-full px-8 glass-button">Open Tool</Button>
+                    <div className="pt-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                      <Button variant="outline" className="rounded-full px-8 glass-button">Get Started</Button>
                     </div>
                   </motion.div>
                 ))}
@@ -130,33 +134,30 @@ export default function GlassPDF() {
           ) : (
             <motion.div 
               key="tool"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, scale: 0.98, filter: 'blur(10px)' }}
+              animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, scale: 1.02, filter: 'blur(10px)' }}
+              transition={{ duration: 0.5 }}
               className="w-full max-w-7xl mx-auto flex-1 flex flex-col min-h-0"
             >
-              <div className="mb-4 flex items-center shrink-0">
+              <div className="mb-6 flex items-center shrink-0">
                 <Button 
                   variant="ghost" 
                   onClick={() => setActiveTool(null)}
-                  className="mr-4 rounded-full w-10 h-10 p-0 glass-button"
+                  className="mr-4 rounded-full w-10 h-10 p-0 glass-button hover:bg-white/90"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
-                <div className="h-6 w-px bg-white/20 mx-2"></div>
-                <div className="ml-4 flex items-center space-x-2">
+                <div className="h-6 w-px bg-slate-300 mx-2"></div>
+                <div className="ml-4 flex items-center space-x-3">
                    {activeTool === 'merge' && <Layers className="w-5 h-5 text-secondary" />}
                    {activeTool === 'split' && <Scissors className="w-5 h-5 text-secondary" />}
                    {activeTool === 'compress' && <Minimize2 className="w-5 h-5 text-secondary" />}
-                   <span className="font-headline font-bold uppercase tracking-widest text-secondary text-sm">Workspace</span>
+                   <span className="font-bold uppercase tracking-[0.2em] text-secondary text-xs">Active Workspace</span>
                 </div>
               </div>
 
-              <div className="flex-1 glass p-6 md:p-10 rounded-[2.5rem] relative flex flex-col min-h-0">
-                {/* Decorative background element for the tool area */}
-                <div className="absolute top-0 right-0 -mr-24 -mt-24 w-64 h-64 bg-primary/20 blur-[100px] rounded-full pointer-events-none"></div>
-                <div className="absolute bottom-0 left-0 -ml-24 -mb-24 w-64 h-64 bg-secondary/10 blur-[100px] rounded-full pointer-events-none"></div>
-                
+              <div className="flex-1 glass p-6 md:p-10 rounded-[3rem] relative flex flex-col min-h-0 border-white/60">
                 <div className="relative z-10 flex-1 overflow-y-auto pr-2 custom-scrollbar">
                   {renderTool()}
                 </div>
