@@ -32,13 +32,15 @@ export const CompressTool: React.FC<CompressToolProps> = ({ initialFile }) => {
       const result = await compressPDFDocument(sourceFile, qualityLevel);
       const savedBytes = result.length;
       
+      // Calculate actual reduction from the processed binary result
       const reduction = (((sourceFile.size - savedBytes) / sourceFile.size) * 100).toFixed(1);
+      const finalSizeMB = (savedBytes / (1024 * 1024)).toFixed(2);
       
-      triggerDownload(result, `ultra_optimized_${sourceFile.name}`);
+      triggerDownload(result, `optimized_${sourceFile.name}`);
       
       toast({ 
-        title: "Ultra Optimization Successful", 
-        description: `Your PDF was reduced by ${reduction}% via structural re-indexing.` 
+        title: "Optimization Successful", 
+        description: `Your PDF was reduced to ${finalSizeMB} MB (${reduction}% smaller).` 
       });
     } catch (err) {
       toast({ 
@@ -53,9 +55,9 @@ export const CompressTool: React.FC<CompressToolProps> = ({ initialFile }) => {
 
   const calculateEstimate = () => {
     if (!sourceFile) return "0 MB";
-    // Ultra-aggressive multipliers to match user expectations for high-performance compression
-    // High mode targets ~68% reduction (e.g. 6.8MB to 2.1MB)
-    const multipliers = { low: 0.90, medium: 0.65, high: 0.32 };
+    // Structural optimization typically achieves between 5% and 15% reduction for already clean files,
+    // and significantly more for unoptimized exports.
+    const multipliers = { low: 0.95, medium: 0.85, high: 0.70 };
     const est = (sourceFile.size * multipliers[qualityLevel]) / (1024 * 1024);
     return `~${est.toFixed(2)} MB`;
   };
@@ -67,7 +69,7 @@ export const CompressTool: React.FC<CompressToolProps> = ({ initialFile }) => {
   const compressionModes = [
     { id: 'low', label: 'Safety Mode', desc: 'Metadata cleanup, 100% quality', icon: ShieldCheck },
     { id: 'medium', label: 'Deep Re-bundle', desc: 'Object deduplication strategy', icon: Gauge },
-    { id: 'high', label: 'Maximum Purge', desc: 'Ultra-aggressive structural optimization', icon: Zap },
+    { id: 'high', label: 'Maximum Purge', desc: 'Total structural re-indexing', icon: Zap },
   ];
 
   return (
@@ -99,7 +101,7 @@ export const CompressTool: React.FC<CompressToolProps> = ({ initialFile }) => {
                  </div>
                  <div className="h-10 w-px bg-slate-900/10 dark:bg-zinc-800"></div>
                  <div className="text-center">
-                    <p className="text-[10px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest mb-1">Target</p>
+                    <p className="text-[10px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest mb-1">Estimated Target</p>
                     <p className="font-black text-xl text-secondary dark:text-primary">{calculateEstimate()}</p>
                  </div>
               </div>

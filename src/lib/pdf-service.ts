@@ -115,6 +115,7 @@ export const compressPDFDocument = async (
   }
 
   // Deep copy pages: This is the most effective way in pdf-lib to deduplicate resources
+  // It forces the library to recreate the object graph from scratch.
   const copiedPages = await compressedPdf.copyPages(sourcePdf, sourcePdf.getPageIndices());
   copiedPages.forEach((page) => compressedPdf.addPage(page));
 

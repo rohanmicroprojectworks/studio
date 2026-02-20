@@ -230,7 +230,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
             exit={{ y: -50, opacity: 0 }}
             className="absolute top-8 left-0 w-full px-8 z-50 flex items-center justify-between"
           >
-            {/* Top Left Navigation Group (Back Arrow & Sidebar Toggle) */}
+            {/* Top Left Navigation Group */}
             <div className="flex items-center space-x-3">
               <Button 
                 variant="ghost" 
@@ -253,9 +253,9 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
               </Button>
             </div>
 
-            {/* Top Right Actions Group (Action Hub & Fullscreen) */}
+            {/* Top Right Actions Group */}
             <div className="flex items-center space-x-3">
-              {/* Adaptive Search Bar (Appears when toggled from Action Hub) */}
+              {/* Adaptive Search Bar */}
               <AnimatePresence>
                 {showSearchInput && (
                   <motion.div 
@@ -284,13 +284,13 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
                 )}
               </AnimatePresence>
 
-              {/* Liquid Quick Actions Hub (3 dots) - Anchored right to stay in-bounds */}
+              {/* Liquid Quick Actions Hub (3 dots) */}
               <div className="relative group">
                 <div className="h-14 w-14 glass flex items-center justify-center rounded-full cursor-pointer hover:scale-110 transition-all duration-500 border-white/40 shadow-2xl">
                   <MoreVertical className="w-6 h-6 text-slate-900 dark:text-white" />
                 </div>
                 
-                {/* Expansion Menu - Positioned to expand leftwards from the button's right edge */}
+                {/* Expansion Menu - Anchored to right edge to prevent overflow */}
                 <div className="absolute top-full right-0 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-500 pt-4 z-50">
                   <div className="glass p-3 rounded-[2rem] flex items-center space-x-2 border-white/30 dark:border-white/10 shadow-2xl min-w-max backdrop-blur-3xl">
                     <Button 
@@ -311,7 +311,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
                 </div>
               </div>
 
-              {/* Fullscreen Toggle (Far Right) */}
+              {/* Fullscreen Toggle */}
               <Button 
                 variant="ghost" 
                 size="icon" 
