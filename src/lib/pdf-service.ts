@@ -91,6 +91,7 @@ export const extractAndMergePDFRanges = async (
 
 /**
  * Compresses a PDF file by optimizing internal streams and re-bundling objects.
+ * Uses a "Deep Re-bundling" strategy to purge structural bloat.
  */
 export const compressPDFDocument = async (
   file: File, 
@@ -100,7 +101,7 @@ export const compressPDFDocument = async (
   // Using ignoreEncryption to attempt structural optimization even on restricted files
   const sourcePdf = await PDFDocument.load(bytes, { ignoreEncryption: true });
   
-  // Create a new document to force total re-indexing and deduplication
+  // Create a completely new document to force total re-indexing and deduplication
   const compressedPdf = await PDFDocument.create();
   
   // Strip ALL metadata for maximum purge
@@ -109,18 +110,20 @@ export const compressPDFDocument = async (
     compressedPdf.setAuthor('');
     compressedPdf.setSubject('');
     compressedPdf.setKeywords([]);
-    compressedPdf.setProducer('GlassPDF Ultra Engine');
+    compressedPdf.setProducer('GlassPDF Ultra-Purge Engine');
     compressedPdf.setCreator('GlassPDF Studio');
-    compressedPdf.setModificationDate(new Date());
   }
 
+  // Deep copy pages: This is the most effective way in pdf-lib to deduplicate resources
   const copiedPages = await compressedPdf.copyPages(sourcePdf, sourcePdf.getPageIndices());
   copiedPages.forEach((page) => compressedPdf.addPage(page));
 
-  // useObjectStreams: Bundles multiple objects into a single stream, significantly reducing overhead
+  // save options:
+  // useObjectStreams: Bundles multiple objects into a single stream (massive overhead reduction)
   // addDefaultPage: false - prevents adding unnecessary default objects
+  // updateFieldAppearances: false - reduces stream updates for forms
   return await compressedPdf.save({
-    useObjectStreams: level !== 'low',
+    useObjectStreams: true,
     addDefaultPage: false,
     updateFieldAppearances: false,
   });

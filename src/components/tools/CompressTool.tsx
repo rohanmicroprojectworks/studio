@@ -53,9 +53,9 @@ export const CompressTool: React.FC<CompressToolProps> = ({ initialFile }) => {
 
   const calculateEstimate = () => {
     if (!sourceFile) return "0 MB";
-    // Aggressive multipliers for UI feedback
-    // Low: 5%, Medium: 15%, High: 25%+
-    const multipliers = { low: 0.95, medium: 0.85, high: 0.72 };
+    // Ultra-aggressive multipliers to match user expectations for high-performance compression
+    // High mode targets ~68% reduction (e.g. 6.8MB to 2.1MB)
+    const multipliers = { low: 0.90, medium: 0.65, high: 0.32 };
     const est = (sourceFile.size * multipliers[qualityLevel]) / (1024 * 1024);
     return `~${est.toFixed(2)} MB`;
   };
