@@ -73,13 +73,13 @@ export const MergeTool: React.FC = () => {
     return (
       <div className="max-w-4xl mx-auto w-full px-2">
         <FileUpload onFilesSelected={onFilesAdded} multiple />
-        <div className="mt-12 p-8 glass-card rounded-[2.5rem] bg-secondary/5 border-secondary/10 flex items-start space-x-6">
-           <div className="p-3 bg-secondary/20 rounded-2xl">
-             <Info className="w-6 h-6 text-secondary" />
+        <div className="mt-12 p-8 glass-card rounded-[2.5rem] bg-secondary/5 dark:bg-primary/5 border-secondary/10 dark:border-primary/10 flex items-start space-x-6">
+           <div className="p-3 bg-secondary/20 dark:bg-primary/20 rounded-2xl">
+             <Info className="w-6 h-6 text-secondary dark:text-primary" />
            </div>
            <div className="space-y-2">
-             <h4 className="font-black text-slate-900 uppercase tracking-widest text-sm">Pro Tip</h4>
-             <p className="text-slate-500 font-medium leading-relaxed">
+             <h4 className="font-black text-slate-900 dark:text-white uppercase tracking-widest text-sm">Pro Tip</h4>
+             <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
                You can select multiple files at once using the file browser or by dragging them directly. Once selected, you'll be able to reorder them to your liking.
              </p>
            </div>
@@ -92,8 +92,8 @@ export const MergeTool: React.FC = () => {
     <div className="flex flex-col h-full space-y-8 max-w-5xl mx-auto w-full px-2">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h2 className="text-4xl font-black tracking-tight text-slate-900">Merge Queue</h2>
-          <p className="text-slate-500 font-semibold mt-1">Drag handles to rearrange your documents before merging.</p>
+          <h2 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">Merge Queue</h2>
+          <p className="text-slate-500 dark:text-slate-400 font-semibold mt-1">Drag handles to rearrange your documents before merging.</p>
         </div>
         <div className="flex space-x-4 w-full md:w-auto">
            <Button variant="outline" onClick={() => setFileList([])} className="glass-button h-14 px-8 rounded-[1.5rem] font-black uppercase tracking-widest text-xs flex-1 md:flex-none">
@@ -132,23 +132,23 @@ export const MergeTool: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.98 }}
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="glass-card p-6 rounded-[2rem] flex items-center justify-between group border-white/40 shadow-xl hover:bg-white/60"
+                className="glass-card p-6 rounded-[2rem] flex items-center justify-between group border-white/40 dark:border-white/10 shadow-xl hover:bg-white/60 dark:hover:bg-zinc-800/60"
               >
                 <div className="flex items-center space-x-6">
-                  <div className="cursor-grab active:cursor-grabbing text-slate-300 group-hover:text-slate-900 transition-colors p-2">
+                  <div className="cursor-grab active:cursor-grabbing text-slate-300 dark:text-zinc-600 group-hover:text-slate-900 dark:group-hover:text-primary transition-colors p-2">
                     <GripVertical className="w-6 h-6" />
                   </div>
-                  <div className="p-4 bg-primary/20 rounded-2xl shadow-inner">
-                    <FileText className="w-8 h-8 text-secondary" />
+                  <div className="p-4 bg-primary/20 dark:bg-primary/10 rounded-2xl shadow-inner">
+                    <FileText className="w-8 h-8 text-secondary dark:text-primary" />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-black text-xl truncate max-w-[120px] sm:max-w-md text-slate-900">{item.name}</p>
-                    <p className="text-sm text-slate-500 font-bold uppercase tracking-widest mt-0.5">{(item.size / 1024 / 1024).toFixed(2)} MB</p>
+                    <p className="font-black text-xl truncate max-w-[120px] sm:max-w-md text-slate-900 dark:text-white">{item.name}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mt-0.5">{(item.size / 1024 / 1024).toFixed(2)} MB</p>
                   </div>
                 </div>
                 <button 
                   onClick={() => onFileRemoved(item.id)}
-                  className="p-4 hover:bg-destructive/10 text-slate-300 hover:text-destructive rounded-2xl transition-all duration-300 group-hover:scale-110"
+                  className="p-4 hover:bg-destructive/10 text-slate-300 dark:text-zinc-700 hover:text-destructive rounded-2xl transition-all duration-300 group-hover:scale-110"
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -158,13 +158,13 @@ export const MergeTool: React.FC = () => {
         </Reorder.Group>
         
         <div className="mt-8">
-           <label className="flex items-center justify-center p-8 border-2 border-dashed border-white/60 rounded-[2rem] cursor-pointer hover:bg-white/40 glass transition-all duration-500 group">
+           <label className="flex items-center justify-center p-8 border-2 border-dashed border-white/60 dark:border-zinc-800 rounded-[2rem] cursor-pointer hover:bg-white/40 dark:hover:bg-zinc-800/40 glass transition-all duration-500 group">
              <input type="file" multiple accept=".pdf" className="hidden" onChange={(e) => onFilesAdded(e.target.files ? Array.from(e.target.files) : [])} />
              <div className="flex flex-col items-center space-y-3">
-                <div className="p-3 bg-white/50 rounded-full group-hover:scale-110 transition-transform">
-                  <Plus className="w-6 h-6 text-slate-600" />
+                <div className="p-3 bg-white/50 dark:bg-zinc-800/50 rounded-full group-hover:scale-110 transition-transform">
+                  <Plus className="w-6 h-6 text-slate-600 dark:text-primary" />
                 </div>
-                <span className="text-slate-500 font-black uppercase tracking-widest text-xs">Append more documents</span>
+                <span className="text-slate-500 dark:text-slate-400 font-black uppercase tracking-widest text-xs">Append more documents</span>
              </div>
            </label>
         </div>

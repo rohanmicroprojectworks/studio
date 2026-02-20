@@ -69,7 +69,7 @@ export const CompressTool: React.FC = () => {
       label: 'Balanced Strategy', 
       desc: 'Optimal quality and size', 
       icon: Gauge,
-      color: 'text-secondary'
+      color: 'text-secondary dark:text-primary'
     },
     { 
       id: 'high', 
@@ -84,8 +84,8 @@ export const CompressTool: React.FC = () => {
     <div className="max-w-5xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-700">
       <div className="flex justify-between items-center px-2">
         <div>
-          <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">Compress Studio</h2>
-          <p className="text-slate-500 font-bold mt-2">Optimize file size without sacrificing professional integrity.</p>
+          <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">Compress Studio</h2>
+          <p className="text-slate-500 dark:text-slate-400 font-bold mt-2">Optimize file size without sacrificing professional integrity.</p>
         </div>
         <Button variant="outline" onClick={() => setSourceFile(null)} className="glass-button h-12 md:h-14 px-6 md:px-10 rounded-2xl text-xs font-black uppercase tracking-widest">
           Swap File
@@ -93,26 +93,26 @@ export const CompressTool: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-        <div className="glass-card p-12 rounded-[3.5rem] flex flex-col items-center justify-center space-y-10 border-white/60 shadow-2xl">
+        <div className="glass-card p-12 rounded-[3.5rem] flex flex-col items-center justify-center space-y-10 border-white/60 dark:border-white/5 shadow-2xl">
            <div className="relative group">
-             <div className="p-14 bg-primary/20 rounded-[3rem] shadow-inner relative z-10">
-                <FileText className="w-28 h-28 text-secondary group-hover:scale-105 transition-transform" />
+             <div className="p-14 bg-primary/20 dark:bg-primary/10 rounded-[3rem] shadow-inner relative z-10">
+                <FileText className="w-28 h-28 text-secondary dark:text-primary group-hover:scale-105 transition-transform" />
              </div>
-             <div className="absolute -inset-4 bg-secondary/5 blur-3xl -z-10 rounded-full animate-pulse"></div>
+             <div className="absolute -inset-4 bg-secondary/5 dark:bg-primary/5 blur-3xl -z-10 rounded-full animate-pulse"></div>
            </div>
            
            <div className="text-center w-full space-y-6">
-              <p className="font-black text-3xl truncate px-4 text-slate-900">{sourceFile.name}</p>
+              <p className="font-black text-3xl truncate px-4 text-slate-900 dark:text-white">{sourceFile.name}</p>
               
               <div className="flex items-center justify-center space-x-8">
                  <div className="text-center">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Current</p>
-                    <p className="font-black text-xl text-slate-900">{(sourceFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                    <p className="text-[10px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest mb-1">Current</p>
+                    <p className="font-black text-xl text-slate-900 dark:text-white">{(sourceFile.size / 1024 / 1024).toFixed(2)} MB</p>
                  </div>
-                 <div className="h-10 w-px bg-slate-900/10"></div>
+                 <div className="h-10 w-px bg-slate-900/10 dark:bg-zinc-800"></div>
                  <div className="text-center">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Expected</p>
-                    <p className="font-black text-xl text-secondary">{calculateEstimate()}</p>
+                    <p className="text-[10px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest mb-1">Expected</p>
+                    <p className="font-black text-xl text-secondary dark:text-primary">{calculateEstimate()}</p>
                  </div>
               </div>
            </div>
@@ -120,8 +120,8 @@ export const CompressTool: React.FC = () => {
 
         <div className="space-y-6">
            <div className="flex items-center space-x-3 mb-4 px-2">
-              <Info className="w-5 h-5 text-slate-400" />
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Select Optimization Level</span>
+              <Info className="w-5 h-5 text-slate-400 dark:text-zinc-500" />
+              <span className="text-xs font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest">Select Optimization Level</span>
            </div>
            
            <div className="space-y-4">
@@ -130,16 +130,16 @@ export const CompressTool: React.FC = () => {
                  key={mode.id}
                  onClick={() => setQualityLevel(mode.id as any)}
                  className={cn(
-                   "w-full text-left p-6 rounded-[2rem] transition-all duration-500 glass-card flex items-center space-x-6 border-white/40",
-                   qualityLevel === mode.id ? "bg-white/90 ring-4 ring-secondary/10 scale-[1.02] shadow-2xl" : "opacity-60 hover:opacity-100"
+                   "w-full text-left p-6 rounded-[2rem] transition-all duration-500 glass-card flex items-center space-x-6 border-white/40 dark:border-white/5",
+                   qualityLevel === mode.id ? "bg-white/90 dark:bg-zinc-800/80 ring-4 ring-secondary/10 dark:ring-primary/10 scale-[1.02] shadow-2xl" : "opacity-60 hover:opacity-100"
                  )}
                >
-                 <div className={cn("p-5 rounded-2xl shadow-inner", qualityLevel === mode.id ? "bg-secondary text-white" : "bg-slate-900/5")}>
+                 <div className={cn("p-5 rounded-2xl shadow-inner", qualityLevel === mode.id ? "bg-secondary dark:bg-primary text-white dark:text-black" : "bg-slate-900/5 dark:bg-white/5")}>
                     <mode.icon className="w-8 h-8" />
                  </div>
                  <div className="flex-1">
-                    <p className={cn("font-black text-xl", qualityLevel === mode.id ? "text-slate-900" : "text-slate-600")}>{mode.label}</p>
-                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">{mode.desc}</p>
+                    <p className={cn("font-black text-xl", qualityLevel === mode.id ? "text-slate-900 dark:text-white" : "text-slate-600 dark:text-zinc-400")}>{mode.label}</p>
+                    <p className="text-xs text-slate-400 dark:text-zinc-500 font-bold uppercase tracking-widest mt-1">{mode.desc}</p>
                  </div>
                </button>
              ))}

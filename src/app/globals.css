@@ -32,28 +32,28 @@
   }
 
   .dark {
-    --background: 222 47% 4%;
+    --background: 222 47% 2%; /* Deeper Black */
     --foreground: 210 40% 98%;
-    --card: 222 47% 6%;
+    --card: 222 47% 4%;
     --card-foreground: 210 40% 98%;
-    --popover: 222 47% 6%;
+    --popover: 222 47% 4%;
     --popover-foreground: 210 40% 98%;
     --primary: 24 95% 53%; /* Vivid Orange Glow */
     --primary-foreground: 210 40% 98%;
     --secondary: 24 95% 63%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 222 47% 12%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 222 47% 10%;
+    --muted-foreground: 215 20% 75%;
     --accent: 24 95% 40%;
     --accent-foreground: 210 40% 98%;
-    --border: 222 47% 15%;
-    --input: 222 47% 15%;
+    --border: 222 47% 12%;
+    --input: 222 47% 12%;
     --ring: 24 95% 53%;
 
-    --grad-1: #0A0A0A;
-    --grad-2: #111827;
-    --grad-3: #030712;
-    --grad-4: #000000;
+    --grad-1: #020202;
+    --grad-2: #0a0a0a;
+    --grad-3: #000000;
+    --grad-4: #111111;
   }
 }
 
@@ -74,20 +74,19 @@
     @apply bg-white/70 dark:bg-black/60 backdrop-blur-3xl border border-white/50 dark:border-white/10 shadow-[0_8px_32px_0_rgba(31,38,135,0.08)];
   }
   .glass-card {
-    @apply bg-white/50 dark:bg-white/5 backdrop-blur-2xl border border-white/60 dark:border-white/10 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] transition-all duration-500 hover:bg-white/70 dark:hover:bg-white/10 hover:scale-[1.005] hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)];
+    @apply bg-white/50 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-white/5 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] transition-all duration-500 hover:bg-white/70 dark:hover:bg-zinc-900/60 hover:scale-[1.005] hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)];
   }
   .dark .glass-card {
-    box-shadow: 0 10px 40px -10px rgba(251, 146, 60, 0.05);
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
   }
   .dark .glass-card:hover {
-    box-shadow: 0 20px 60px -15px rgba(251, 146, 60, 0.15);
+    box-shadow: 0 20px 60px -15px rgba(251, 146, 60, 0.1);
   }
 
   .glass-button {
-    @apply bg-white/50 dark:bg-white/10 hover:bg-white/90 dark:hover:bg-white/20 backdrop-blur-lg border border-white/60 dark:border-white/20 text-foreground font-black transition-all duration-300 shadow-sm active:scale-95;
+    @apply bg-white/50 dark:bg-zinc-800/40 hover:bg-white/90 dark:hover:bg-zinc-800/60 backdrop-blur-lg border border-white/60 dark:border-white/10 text-foreground font-black transition-all duration-300 shadow-sm active:scale-95;
   }
 
-  /* True Liquid Glass Button Style */
   .liquid-button {
     @apply relative flex items-center justify-center gap-2 font-bold transition-all duration-500 overflow-hidden outline-none border-none cursor-pointer select-none;
     background: rgba(255, 255, 255, 0.45);
@@ -99,11 +98,12 @@
   }
 
   .dark .liquid-button {
-    background: rgba(0, 0, 0, 0.45);
+    background: rgba(251, 146, 60, 0.15);
+    backdrop-filter: blur(25px) saturate(200%);
     box-shadow: 
       inset 0 0.5px 0 0.5px rgba(255, 255, 255, 0.1),
       inset 0 -1px 1px 0 rgba(0, 0, 0, 0.5),
-      0 10px 30px -10px rgba(251, 146, 60, 0.2);
+      0 10px 30px -10px rgba(0, 0, 0, 0.3);
   }
 
   .liquid-button::before {
@@ -113,11 +113,11 @@
   }
 
   .dark .liquid-button::before {
-    background: radial-gradient(circle at center, rgba(251, 146, 60, 0.2) 0%, transparent 75%);
+    background: radial-gradient(circle at center, rgba(251, 146, 60, 0.3) 0%, transparent 75%);
   }
 
   .liquid-button:hover {
-    @apply scale-[1.02] bg-white/65 dark:bg-white/15;
+    @apply scale-[1.02] bg-white/65 dark:bg-orange-500/20;
     box-shadow: 
       inset 0 0.5px 0 0.5px rgba(255, 255, 255, 0.8),
       inset 0 -1px 1px 0 rgba(0, 0, 0, 0.01),
@@ -129,8 +129,8 @@
     box-shadow: 
       inset 0 0.5px 0 0.5px rgba(255, 255, 255, 0.2),
       inset 0 -1px 1px 0 rgba(0, 0, 0, 0.2),
-      0 20px 40px -15px rgba(251, 146, 60, 0.3),
-      0 0 25px 2px rgba(251, 146, 60, 0.1);
+      0 20px 40px -15px rgba(251, 146, 60, 0.4),
+      0 0 25px 2px rgba(251, 146, 60, 0.2);
   }
 
   .liquid-button:hover::before {
@@ -143,7 +143,7 @@
   }
 
   .liquid-button-text {
-    @apply relative z-10 text-slate-900 dark:text-slate-100 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_1px_4px_rgba(251,146,60,0.3)];
+    @apply relative z-10 text-slate-900 dark:text-white drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)];
   }
   
   .custom-scrollbar::-webkit-scrollbar {
@@ -156,7 +156,6 @@
     @apply bg-slate-900/10 dark:bg-white/10 rounded-full hover:bg-slate-900/20 dark:hover:bg-white/20 transition-colors;
   }
 
-  /* Theme Checkbox Switch */
   .theme-checkbox {
     --toggle-size: 10px;
     -webkit-appearance: none;
@@ -164,9 +163,9 @@
     appearance: none;
     width: 6.25em;
     height: 3.125em;
-    background: -webkit-gradient(linear, left top, right top, color-stop(50%, #efefef), color-stop(50%, #2a2a2a)) no-repeat;
-    background: -o-linear-gradient(left, #efefef 50%, #2a2a2a 50%) no-repeat;
-    background: linear-gradient(to right, #efefef 50%, #2a2a2a 50%) no-repeat;
+    background: -webkit-gradient(linear, left top, right top, color-stop(50%, #efefef), color-stop(50%, #1a1a1a)) no-repeat;
+    background: -o-linear-gradient(left, #efefef 50%, #1a1a1a 50%) no-repeat;
+    background: linear-gradient(to right, #efefef 50%, #1a1a1a 50%) no-repeat;
     background-size: 205%;
     background-position: 0;
     -webkit-transition: 0.4s;
@@ -176,7 +175,7 @@
     position: relative;
     cursor: pointer;
     font-size: var(--toggle-size);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 4px 20px -5px rgba(0,0,0,0.1);
   }
 
@@ -187,16 +186,16 @@
     position: absolute;
     top: 0.438em;
     left: 0.438em;
-    background: -webkit-gradient(linear, left top, right top, color-stop(50%, #efefef), color-stop(50%, #2a2a2a)) no-repeat;
-    background: -o-linear-gradient(left, #efefef 50%, #2a2a2a 50%) no-repeat;
-    background: linear-gradient(to right, #efefef 50%, #2a2a2a 50%) no-repeat;
+    background: -webkit-gradient(linear, left top, right top, color-stop(50%, #efefef), color-stop(50%, #1a1a1a)) no-repeat;
+    background: -o-linear-gradient(left, #efefef 50%, #1a1a1a 50%) no-repeat;
+    background: linear-gradient(to right, #efefef 50%, #1a1a1a 50%) no-repeat;
     background-size: 205%;
     background-position: 100%;
     border-radius: 50%;
     -webkit-transition: 0.4s;
     -o-transition: 0.4s;
     transition: 0.4s;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
   }
 
   .theme-checkbox:checked::before {
@@ -206,10 +205,9 @@
 
   .theme-checkbox:checked {
     background-position: 100%;
-    box-shadow: 0 4px 20px -5px rgba(251, 146, 60, 0.4);
+    box-shadow: 0 4px 20px -5px rgba(251, 146, 60, 0.6);
   }
 
-  /* Interactive Logo Button */
   .Btn {
     width: 45px;
     height: 45px;
@@ -243,6 +241,10 @@
     @apply absolute inset-0 rounded-xl pointer-events-none transition-all duration-300;
     background: #181818;
     z-index: 1;
+  }
+
+  .dark .BG {
+    background: #fb923c;
   }
 
   .Btn:hover .BG {
