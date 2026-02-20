@@ -30,8 +30,8 @@
     --grad-3: #E0F2FE;
     --grad-4: #BAE6FD;
     
-    --blob-1: rgba(59, 130, 246, 0.15);
-    --blob-2: rgba(99, 102, 241, 0.12);
+    --blob-1: rgba(59, 130, 246, 0.18);
+    --blob-2: rgba(99, 102, 241, 0.15);
   }
 
   .dark {
@@ -58,14 +58,14 @@
     --grad-3: #000000;
     --grad-4: #111111;
 
-    --blob-1: rgba(251, 146, 60, 0.1);
-    --blob-2: rgba(245, 158, 11, 0.08);
+    --blob-1: rgba(251, 146, 60, 0.12);
+    --blob-2: rgba(245, 158, 11, 0.1);
   }
 }
 
 @layer base {
   * {
-    @apply border-border transition-colors duration-500 ease-in-out;
+    @apply border-border transition-colors duration-700 ease-in-out;
   }
   body {
     @apply bg-background text-foreground antialiased overflow-x-hidden;
@@ -79,48 +79,57 @@
   body::after {
     content: "";
     position: fixed;
-    width: 800px;
-    height: 800px;
+    width: 900px;
+    height: 900px;
     border-radius: 50%;
-    filter: blur(140px);
+    filter: blur(160px);
     z-index: -1;
     pointer-events: none;
-    animation: float 25s infinite ease-in-out alternate;
+    animation: breath 35s infinite ease-in-out alternate;
   }
 
   body::before {
     background: var(--blob-1);
-    top: -300px;
-    left: -300px;
+    top: -400px;
+    left: -400px;
   }
 
   body::after {
     background: var(--blob-2);
-    bottom: -300px;
-    right: -300px;
-    animation-delay: 12.5s;
-    animation-duration: 30s;
+    bottom: -400px;
+    right: -400px;
+    animation-delay: 17.5s;
+    animation-duration: 45s;
   }
 
-  @keyframes float {
-    0% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(150px, 100px) scale(1.1); }
-    100% { transform: translate(-50px, 200px) scale(0.9); }
+  @keyframes breath {
+    0% { 
+      transform: translate(0, 0) scale(1); 
+      opacity: 0.8;
+    }
+    50% { 
+      transform: translate(100px, 80px) scale(1.15); 
+      opacity: 1;
+    }
+    100% { 
+      transform: translate(-30px, 150px) scale(0.95); 
+      opacity: 0.7;
+    }
   }
 }
 
 @layer components {
   .glass {
-    @apply bg-white/40 dark:bg-black/40 backdrop-blur-3xl border border-white/50 dark:border-white/10 shadow-[0_8px_32px_0_rgba(31,38,135,0.08)];
+    @apply bg-white/40 dark:bg-black/40 backdrop-blur-[40px] border border-white/50 dark:border-white/10 shadow-[0_8px_32px_0_rgba(31,38,135,0.08)];
   }
   .glass-card {
-    @apply bg-white/30 dark:bg-zinc-900/30 backdrop-blur-2xl border border-white/60 dark:border-white/5 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] transition-all duration-500 hover:bg-white/40 dark:hover:bg-zinc-900/40 hover:scale-[1.005] hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)];
+    @apply bg-white/30 dark:bg-zinc-900/30 backdrop-blur-[32px] border border-white/60 dark:border-white/5 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] transition-all duration-700 hover:bg-white/40 dark:hover:bg-zinc-900/40 hover:scale-[1.005] hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)];
   }
   .dark .glass-card {
     box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
   }
   .dark .glass-card:hover {
-    box-shadow: 0 20px 60px -15px rgba(251, 146, 60, 0.1);
+    box-shadow: 0 20px 60px -15px rgba(251, 146, 60, 0.15);
   }
 
   .glass-button {
@@ -128,7 +137,7 @@
   }
 
   .liquid-button {
-    @apply relative flex items-center justify-center gap-2 font-bold transition-all duration-500 overflow-hidden outline-none border-none cursor-pointer select-none;
+    @apply relative flex items-center justify-center gap-2 font-bold transition-all duration-700 overflow-hidden outline-none border-none cursor-pointer select-none;
     background: rgba(255, 255, 255, 0.35);
     backdrop-filter: blur(30px) saturate(180%);
     box-shadow: 
@@ -138,7 +147,7 @@
   }
 
   .dark .liquid-button {
-    background: rgba(251, 146, 60, 0.15);
+    background: rgba(251, 146, 60, 0.18);
     backdrop-filter: blur(30px) saturate(200%);
     box-shadow: 
       inset 0 0.5px 0 0.5px rgba(255, 255, 255, 0.1),
@@ -148,29 +157,29 @@
 
   .liquid-button::before {
     content: '';
-    @apply absolute inset-0 opacity-0 transition-opacity duration-700 pointer-events-none;
-    background: radial-gradient(circle at center, rgba(59, 130, 246, 0.15) 0%, transparent 75%);
+    @apply absolute inset-0 opacity-0 transition-opacity duration-1000 pointer-events-none;
+    background: radial-gradient(circle at center, rgba(59, 130, 246, 0.2) 0%, transparent 75%);
   }
 
   .dark .liquid-button::before {
-    background: radial-gradient(circle at center, rgba(251, 146, 60, 0.35) 0%, transparent 75%);
+    background: radial-gradient(circle at center, rgba(251, 146, 60, 0.4) 0%, transparent 75%);
   }
 
   .liquid-button:hover {
-    @apply scale-[1.02] bg-white/50 dark:bg-orange-500/20;
+    @apply scale-[1.02] bg-white/50 dark:bg-orange-500/25;
     box-shadow: 
       inset 0 0.5px 0 0.5px rgba(255, 255, 255, 0.7),
       inset 0 -1px 1px 0 rgba(0, 0, 0, 0.02),
-      0 20px 40px -15px rgba(59, 130, 246, 0.2),
-      0 0 25px 2px rgba(59, 130, 246, 0.1);
+      0 20px 40px -15px rgba(59, 130, 246, 0.25),
+      0 0 25px 2px rgba(59, 130, 246, 0.15);
   }
 
   .dark .liquid-button:hover {
     box-shadow: 
-      inset 0 0.5px 0 0.5px rgba(255, 255, 255, 0.2),
+      inset 0 0.5px 0 0.5px rgba(255, 255, 255, 0.25),
       inset 0 -1px 1px 0 rgba(0, 0, 0, 0.2),
-      0 20px 40px -15px rgba(251, 146, 60, 0.5),
-      0 0 25px 2px rgba(251, 146, 60, 0.25);
+      0 20px 40px -15px rgba(251, 146, 60, 0.6),
+      0 0 25px 2px rgba(251, 146, 60, 0.35);
   }
 
   .liquid-button:hover::before {
@@ -187,13 +196,13 @@
   }
   
   .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
+    width: 10px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-slate-900/10 dark:bg-white/10 rounded-full hover:bg-slate-900/20 dark:hover:bg-white/20 transition-colors;
+    @apply bg-slate-900/10 dark:bg-white/10 rounded-full border-4 border-transparent bg-clip-content hover:bg-slate-900/20 dark:hover:bg-white/20 transition-colors;
   }
 
   .theme-checkbox {
