@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -52,12 +51,15 @@ export default function GlassPDF() {
       {/* Navbar / Header */}
       <header className="z-50 px-8 py-6 flex justify-between items-center bg-white/10 backdrop-blur-md border-b border-white/20">
         <div 
-          className="flex items-center space-x-3 cursor-pointer group"
+          className="flex items-center space-x-4 cursor-pointer"
           onClick={() => setActiveTool(null)}
         >
-          <div className="w-10 h-10 bg-secondary rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-            <span className="text-white font-bold text-xl">G</span>
-          </div>
+          <button className="Btn">
+            <div className="svgContainer">
+              <span className="text-white font-black text-xl">G</span>
+            </div>
+            <div className="BG"></div>
+          </button>
           <h1 className="text-2xl font-headline font-black tracking-tight text-secondary-foreground">GlassPDF</h1>
         </div>
         <div className="flex items-center space-x-4">
