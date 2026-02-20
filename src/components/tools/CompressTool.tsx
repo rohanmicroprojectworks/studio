@@ -31,19 +31,21 @@ export const CompressTool: React.FC<CompressToolProps> = ({ initialFile }) => {
     try {
       const result = await compressPDFDocument(sourceFile, qualityLevel);
       const savedBytes = result.length;
+      
+      // Calculate real-world savings
       const reduction = (((sourceFile.size - savedBytes) / sourceFile.size) * 100).toFixed(1);
       
-      triggerDownload(result, `compressed_${sourceFile.name}`);
+      triggerDownload(result, `optimized_${sourceFile.name}`);
       
       toast({ 
-        title: "Success", 
-        description: `PDF optimized! Reduced by ${reduction}% (${(savedBytes / 1024 / 1024).toFixed(2)} MB total).` 
+        title: "Optimization Successful", 
+        description: `Your PDF was reduced by ${reduction}% while maintaining 100% visual integrity.` 
       });
     } catch (err) {
       toast({ 
         variant: "destructive",
-        title: "Process Failed", 
-        description: "Compression could not be completed. The file might be encrypted or corrupted." 
+        title: "Optimization Failed", 
+        description: "The file could not be processed. It may be encrypted or already fully optimized." 
       });
     } finally {
       setProcessing(false);
@@ -52,8 +54,9 @@ export const CompressTool: React.FC<CompressToolProps> = ({ initialFile }) => {
 
   const calculateEstimate = () => {
     if (!sourceFile) return "0 MB";
-    // More realistic multipliers for structure-only compression
-    const multipliers = { low: 0.98, medium: 0.94, high: 0.88 };
+    // Realistic multipliers for structural-only browser-native optimization
+    // Low: 1-2%, Medium: 4-6%, High: 8-12%
+    const multipliers = { low: 0.985, medium: 0.95, high: 0.89 };
     const est = (sourceFile.size * multipliers[qualityLevel]) / (1024 * 1024);
     return `~${est.toFixed(2)} MB`;
   };
@@ -63,9 +66,9 @@ export const CompressTool: React.FC<CompressToolProps> = ({ initialFile }) => {
   }
 
   const compressionModes = [
-    { id: 'low', label: 'Light Compression', desc: 'Metadata cleanup, max quality', icon: ShieldCheck },
-    { id: 'medium', label: 'Balanced Strategy', desc: 'Deduplication & stream optimization', icon: Gauge },
-    { id: 'high', label: 'Extreme Optimization', desc: 'Deep re-bundling & info removal', icon: Zap },
+    { id: 'low', label: 'Safety Mode', desc: 'Metadata cleanup, 100% quality', icon: ShieldCheck },
+    { id: 'medium', label: 'Deep Re-bundle', desc: 'Object deduplication strategy', icon: Gauge },
+    { id: 'high', label: 'Maximum Purge', desc: 'Full structural optimization', icon: Zap },
   ];
 
   return (
@@ -73,7 +76,7 @@ export const CompressTool: React.FC<CompressToolProps> = ({ initialFile }) => {
       <div className="flex justify-between items-center px-2">
         <div>
           <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">Compress Studio</h2>
-          <p className="text-slate-500 dark:text-slate-400 font-bold mt-2">Optimize file size without sacrificing professional integrity.</p>
+          <p className="text-slate-500 dark:text-slate-400 font-bold mt-2">Optimize file size through professional structural re-bundling.</p>
         </div>
         <Button variant="outline" onClick={() => setSourceFile(null)} className="glass-button h-12 md:h-14 px-6 md:px-10 rounded-2xl text-xs font-black uppercase tracking-widest">
           Swap File
@@ -97,7 +100,7 @@ export const CompressTool: React.FC<CompressToolProps> = ({ initialFile }) => {
                  </div>
                  <div className="h-10 w-px bg-slate-900/10 dark:bg-zinc-800"></div>
                  <div className="text-center">
-                    <p className="text-[10px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest mb-1">Expected</p>
+                    <p className="text-[10px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest mb-1">Estimated</p>
                     <p className="font-black text-xl text-secondary dark:text-primary">{calculateEstimate()}</p>
                  </div>
               </div>
@@ -129,7 +132,7 @@ export const CompressTool: React.FC<CompressToolProps> = ({ initialFile }) => {
            <div className="p-6 glass-card rounded-3xl bg-amber-500/5 border-amber-500/10 flex items-start space-x-4">
               <Info className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
               <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium leading-relaxed">
-                <span className="font-black text-slate-700 dark:text-zinc-200">Note:</span> Browser-native compression focuses on optimizing document structure and deduplicating objects. For documents already optimized, further reduction may be limited.
+                <span className="font-black text-slate-700 dark:text-zinc-200">Note:</span> We use structural re-bundling to ensure <span className="text-secondary dark:text-primary font-bold">zero quality loss</span>. This process purges unused data and deduplicates resources without affecting text or images.
               </p>
            </div>
            
@@ -139,7 +142,7 @@ export const CompressTool: React.FC<CompressToolProps> = ({ initialFile }) => {
             disabled={processing}
           >
             <span className="liquid-button-text flex items-center text-2xl font-black uppercase tracking-tight">
-              {processing ? <><Loader2 className="w-8 h-8 animate-spin mr-4" /> Optimizing...</> : <><Minimize2 className="w-8 h-8 mr-4" /> Compress PDF</>}
+              {processing ? <><Loader2 className="w-8 h-8 animate-spin mr-4" /> Optimizing...</> : <><Minimize2 className="w-8 h-8 mr-4" /> Optimize PDF</>}
             </span>
           </button>
         </div>

@@ -101,19 +101,25 @@ export const compressPDFDocument = async (
   
   // Create a new document and copy pages to deduplicate shared resources
   const compressedPdf = await PDFDocument.create();
-  const copiedPages = await compressedPdf.copyPages(sourcePdf, sourcePdf.getPageIndices());
-  copiedPages.forEach((page) => compressedPdf.addPage(page));
-
-  // High compression cleans up metadata
+  
+  // For High compression, we strip all metadata to save every byte possible
   if (level === 'high') {
+    compressedPdf.setTitle('');
+    compressedPdf.setAuthor('');
+    compressedPdf.setSubject('');
+    compressedPdf.setKeywords([]);
     compressedPdf.setProducer('GlassPDF Engine');
     compressedPdf.setCreator('GlassPDF Studio');
   }
 
-  // Use object streams to reduce metadata overhead
+  const copiedPages = await compressedPdf.copyPages(sourcePdf, sourcePdf.getPageIndices());
+  copiedPages.forEach((page) => compressedPdf.addPage(page));
+
+  // Use object streams to reduce metadata overhead and compress cross-reference tables
   return await compressedPdf.save({
     useObjectStreams: level !== 'low',
     addDefaultPage: false,
+    updateFieldAppearances: false, // Prevents bloating with new widget appearances
   });
 };
 
