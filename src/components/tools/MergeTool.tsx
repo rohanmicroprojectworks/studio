@@ -11,7 +11,7 @@ import React, { useState } from 'react';
 import { FileUpload } from './FileUpload';
 import { mergePDFDocuments, triggerDownload, PDFFileMetadata } from '@/lib/pdf-service';
 import { Button } from '@/components/ui/button';
-import { FileText, X, GripVertical, Plus, Info } from 'lucide-react';
+import { FileText, X, GripVertical, Plus, Info, Loader2 } from 'lucide-react';
 import { Reorder, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 
@@ -71,7 +71,7 @@ export const MergeTool: React.FC = () => {
 
   if (fileList.length === 0) {
     return (
-      <div className="max-w-4xl mx-auto w-full">
+      <div className="max-w-4xl mx-auto w-full px-2">
         <FileUpload onFilesSelected={onFilesAdded} multiple />
         <div className="mt-12 p-8 glass-card rounded-[2.5rem] bg-secondary/5 border-secondary/10 flex items-start space-x-6">
            <div className="p-3 bg-secondary/20 rounded-2xl">
@@ -89,7 +89,7 @@ export const MergeTool: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-full space-y-8 max-w-5xl mx-auto w-full">
+    <div className="flex flex-col h-full space-y-8 max-w-5xl mx-auto w-full px-2">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <h2 className="text-4xl font-black tracking-tight text-slate-900">Merge Queue</h2>
@@ -104,7 +104,12 @@ export const MergeTool: React.FC = () => {
             disabled={processing} 
             className="bg-secondary hover:bg-secondary/90 text-white font-black h-14 px-12 rounded-[1.5rem] shadow-2xl transition-all hover:scale-[1.02] flex-1 md:flex-none"
            >
-            {processing ? "Merging..." : "Confirm & Merge"}
+            {processing ? (
+              <div className="flex items-center">
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                Merging...
+              </div>
+            ) : "Confirm & Merge"}
           </Button>
         </div>
       </div>
@@ -130,7 +135,7 @@ export const MergeTool: React.FC = () => {
                     <FileText className="w-8 h-8 text-secondary" />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-black text-xl truncate max-w-md text-slate-900">{item.name}</p>
+                    <p className="font-black text-xl truncate max-w-[120px] sm:max-w-md text-slate-900">{item.name}</p>
                     <p className="text-sm text-slate-500 font-bold uppercase tracking-widest mt-0.5">{(item.size / 1024 / 1024).toFixed(2)} MB</p>
                   </div>
                 </div>

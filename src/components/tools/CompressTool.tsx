@@ -11,7 +11,7 @@ import React, { useState } from 'react';
 import { FileUpload } from './FileUpload';
 import { compressPDFDocument, triggerDownload } from '@/lib/pdf-service';
 import { Button } from '@/components/ui/button';
-import { FileText, Zap, ShieldCheck, Gauge, Info } from 'lucide-react';
+import { FileText, Zap, ShieldCheck, Gauge, Info, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -82,12 +82,12 @@ export const CompressTool: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-700">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center px-2">
         <div>
-          <h2 className="text-5xl font-black text-slate-900 tracking-tight">Compress Studio</h2>
+          <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">Compress Studio</h2>
           <p className="text-slate-500 font-bold mt-2">Optimize file size without sacrificing professional integrity.</p>
         </div>
-        <Button variant="outline" onClick={() => setSourceFile(null)} className="glass-button h-14 px-10 rounded-2xl text-xs font-black uppercase tracking-widest">
+        <Button variant="outline" onClick={() => setSourceFile(null)} className="glass-button h-12 md:h-14 px-6 md:px-10 rounded-2xl text-xs font-black uppercase tracking-widest">
           Swap File
         </Button>
       </div>
@@ -131,7 +131,7 @@ export const CompressTool: React.FC = () => {
                  onClick={() => setQualityLevel(mode.id as any)}
                  className={cn(
                    "w-full text-left p-6 rounded-[2rem] transition-all duration-500 glass-card flex items-center space-x-6 border-white/40",
-                   qualityLevel === mode.id ? "bg-white/80 ring-4 ring-secondary/10 scale-[1.02] shadow-2xl" : "opacity-60 hover:opacity-100"
+                   qualityLevel === mode.id ? "bg-white/90 ring-4 ring-secondary/10 scale-[1.02] shadow-2xl" : "opacity-60 hover:opacity-100"
                  )}
                >
                  <div className={cn("p-5 rounded-2xl shadow-inner", qualityLevel === mode.id ? "bg-secondary text-white" : "bg-slate-900/5")}>

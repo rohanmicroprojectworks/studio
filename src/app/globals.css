@@ -15,7 +15,7 @@
     --secondary: 221 83% 53%; /* Sharper blue for contrast */
     --secondary-foreground: 222 47% 11%;
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 25% 40%; /* Increased contrast */
+    --muted-foreground: 215.4 25% 40%;
     --accent: 207 82% 81%;
     --accent-foreground: 222 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
@@ -23,7 +23,7 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
-    --radius: 1.25rem;
+    --radius: 1.5rem;
   }
 }
 
@@ -33,32 +33,33 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    background: radial-gradient(circle at top left, #FFFFFF 0%, #E0F2FE 50%, #BAE6FD 100%);
+    background: radial-gradient(circle at top left, #FFFFFF 0%, #F0F9FF 30%, #E0F2FE 70%, #BAE6FD 100%);
     min-height: 100dvh;
   }
 }
 
 @layer components {
   .glass {
-    @apply bg-white/60 backdrop-blur-2xl border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)];
+    @apply bg-white/70 backdrop-blur-3xl border border-white/50 shadow-[0_8px_32px_0_rgba(31,38,135,0.08)];
   }
   .glass-card {
-    @apply bg-white/40 backdrop-blur-xl border border-white/50 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] transition-all duration-500 hover:bg-white/60 hover:scale-[1.01] hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)];
+    @apply bg-white/50 backdrop-blur-2xl border border-white/60 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] transition-all duration-500 hover:bg-white/70 hover:scale-[1.005] hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)];
   }
   .glass-button {
-    @apply bg-white/40 hover:bg-white/80 backdrop-blur-md border border-white/40 text-foreground font-bold transition-all duration-300 shadow-sm active:scale-95;
+    @apply bg-white/50 hover:bg-white/90 backdrop-blur-lg border border-white/60 text-foreground font-black transition-all duration-300 shadow-sm active:scale-95;
   }
   
   .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-secondary/20 rounded-full hover:bg-secondary/40 transition-colors;
+    @apply bg-slate-900/10 rounded-full hover:bg-slate-900/20 transition-colors;
   }
 
+  /* Interactive Logo Button from Uiverse.io by vinodjangid07 */
   .Btn {
     width: 45px;
     height: 45px;

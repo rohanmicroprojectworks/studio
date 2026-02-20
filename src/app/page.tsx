@@ -56,11 +56,8 @@ export default function PDFWorkspace() {
 
   return (
     <div className="h-[100dvh] flex flex-col font-body overflow-hidden text-slate-900 selection:bg-secondary/20">
-      {/* 
-          Glass Navigation Bar 
-          Compact height for optimized workspace visibility.
-      */}
-      <header className="z-50 px-4 md:px-8 h-16 flex justify-between items-center bg-white/10 backdrop-blur-2xl border-b border-white/20 shrink-0 shadow-[0_1px_10px_rgba(0,0,0,0.05)]">
+      {/* Glass Navigation Bar */}
+      <header className="z-50 px-4 md:px-8 h-16 flex justify-between items-center bg-white/20 backdrop-blur-2xl border-b border-white/20 shrink-0 shadow-sm">
         <div 
           className="flex items-center space-x-3 cursor-pointer group"
           onClick={() => setActiveTool(null)}
@@ -77,7 +74,7 @@ export default function PDFWorkspace() {
         <nav className="flex items-center space-x-4">
           <div className="hidden sm:flex items-center px-4 py-1.5 rounded-full bg-slate-900/5 border border-slate-900/10 text-[10px] font-bold tracking-widest text-slate-500">
             <ShieldCheck className="w-3 h-3 mr-2 text-emerald-500" />
-            100% PRIVATE • BROWSER-ONLY
+            SECURE • BROWSER-ONLY
           </div>
           <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/40">
             <Github className="w-5 h-5 text-slate-600" />
@@ -86,8 +83,8 @@ export default function PDFWorkspace() {
       </header>
 
       <main className={cn(
-        "flex-1 relative flex flex-col overflow-y-auto custom-scrollbar p-4 md:p-8 lg:p-12",
-        !activeTool && "items-center justify-center"
+        "flex-1 relative flex flex-col overflow-hidden p-4 md:p-6 lg:p-8",
+        !activeTool && "items-center justify-center overflow-y-auto"
       )}>
         {/* Dynamic Background Effects */}
         <div className="fixed top-1/4 left-1/4 w-[20rem] md:w-[40rem] h-[20rem] md:h-[40rem] bg-blue-400/10 blur-[160px] rounded-full -z-10 animate-pulse pointer-events-none"></div>
@@ -156,7 +153,7 @@ export default function PDFWorkspace() {
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               className="w-full max-w-7xl mx-auto h-full flex flex-col min-h-0"
             >
-              <div className="mb-6 flex items-center shrink-0">
+              <div className="mb-4 flex items-center shrink-0">
                 <Button 
                   variant="ghost" 
                   onClick={() => setActiveTool(null)}
@@ -173,7 +170,7 @@ export default function PDFWorkspace() {
                 </div>
               </div>
 
-              <div className="flex-1 glass p-4 md:p-8 lg:p-12 rounded-[2rem] md:rounded-[3rem] lg:rounded-[4rem] relative flex flex-col min-h-0 border-white/60 shadow-2xl">
+              <div className="flex-1 glass p-4 md:p-8 rounded-[2rem] md:rounded-[3rem] relative flex flex-col min-h-0 border-white/60 shadow-2xl overflow-hidden">
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
                   {renderActiveWorkspace()}
                 </div>
