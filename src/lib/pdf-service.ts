@@ -97,29 +97,32 @@ export const compressPDFDocument = async (
   level: 'low' | 'medium' | 'high'
 ): Promise<Uint8Array> => {
   const bytes = await file.arrayBuffer();
-  const sourcePdf = await PDFDocument.load(bytes);
+  // Using ignoreEncryption to attempt structural optimization even on restricted files
+  const sourcePdf = await PDFDocument.load(bytes, { ignoreEncryption: true });
   
-  // Create a new document and copy pages to deduplicate shared resources
+  // Create a new document to force total re-indexing and deduplication
   const compressedPdf = await PDFDocument.create();
   
-  // For High compression, we strip all metadata to save every byte possible
-  if (level === 'high') {
+  // Strip ALL metadata for maximum purge
+  if (level === 'high' || level === 'medium') {
     compressedPdf.setTitle('');
     compressedPdf.setAuthor('');
     compressedPdf.setSubject('');
     compressedPdf.setKeywords([]);
-    compressedPdf.setProducer('GlassPDF Engine');
+    compressedPdf.setProducer('GlassPDF Ultra Engine');
     compressedPdf.setCreator('GlassPDF Studio');
+    compressedPdf.setModificationDate(new Date());
   }
 
   const copiedPages = await compressedPdf.copyPages(sourcePdf, sourcePdf.getPageIndices());
   copiedPages.forEach((page) => compressedPdf.addPage(page));
 
-  // Use object streams to reduce metadata overhead and compress cross-reference tables
+  // useObjectStreams: Bundles multiple objects into a single stream, significantly reducing overhead
+  // addDefaultPage: false - prevents adding unnecessary default objects
   return await compressedPdf.save({
     useObjectStreams: level !== 'low',
     addDefaultPage: false,
-    updateFieldAppearances: false, // Prevents bloating with new widget appearances
+    updateFieldAppearances: false,
   });
 };
 
