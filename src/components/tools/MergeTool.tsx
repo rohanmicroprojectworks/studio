@@ -7,7 +7,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileUpload } from './FileUpload';
 import { mergePDFDocuments, triggerDownload, PDFFileMetadata } from '@/lib/pdf-service';
 import { Button } from '@/components/ui/button';
@@ -15,14 +15,21 @@ import { FileText, X, GripVertical, Plus, Info, Loader2, Layers } from 'lucide-r
 import { Reorder, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 
-export const MergeTool: React.FC = () => {
+interface MergeToolProps {
+  initialFile?: File | null;
+}
+
+export const MergeTool: React.FC<MergeToolProps> = ({ initialFile }) => {
   const [fileList, setFileList] = useState<PDFFileMetadata[]>([]);
   const [processing, setProcessing] = useState(false);
   const { toast } = useToast();
 
-  /**
-   * Processes selected files and adds them to the reorderable list.
-   */
+  useEffect(() => {
+    if (initialFile) {
+      onFilesAdded([initialFile]);
+    }
+  }, [initialFile]);
+
   const onFilesAdded = (selectedFiles: File[]) => {
     const newItems = selectedFiles.map(file => ({
       file,
@@ -33,16 +40,10 @@ export const MergeTool: React.FC = () => {
     setFileList(prev => [...prev, ...newItems]);
   };
 
-  /**
-   * Removes a specific file from the merge queue.
-   */
   const onFileRemoved = (id: string) => {
     setFileList(prev => prev.filter(item => item.id !== id));
   };
 
-  /**
-   * Triggers the merge process and browser download.
-   */
   const onMergeTriggered = async () => {
     if (fileList.length < 2) {
       toast({ 

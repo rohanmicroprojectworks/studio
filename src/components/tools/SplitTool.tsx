@@ -17,7 +17,6 @@ import { FileText, Scissors, Plus, X, Eye, Loader2, Info, ChevronRight } from 'l
 import { useToast } from '@/hooks/use-toast';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Initialize PDF.js worker securely via CDN
 const PDF_JS_VERSION = '3.11.174';
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDF_JS_VERSION}/pdf.worker.min.js`;
 
@@ -27,10 +26,10 @@ interface PageRange {
   id: string;
 }
 
-/**
- * PagePreview Component
- * Renders a localized thumbnail of a specific PDF page.
- */
+interface SplitToolProps {
+  initialFile?: File | null;
+}
+
 const PagePreview = ({ file, pageIndex }: { file: File; pageIndex: number }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [loading, setLoading] = useState(true);
@@ -45,17 +44,14 @@ const PagePreview = ({ file, pageIndex }: { file: File; pageIndex: number }) => 
       try {
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        
         if (pageIndex > pdf.numPages) {
           if (active) setError(true);
           return;
         }
-
         const page = await pdf.getPage(pageIndex);
         const viewport = page.getViewport({ scale: 0.4 });
         const canvas = canvasRef.current;
         const context = canvas.getContext('2d');
-
         if (context && active) {
           canvas.height = viewport.height;
           canvas.width = viewport.width;
@@ -67,7 +63,6 @@ const PagePreview = ({ file, pageIndex }: { file: File; pageIndex: number }) => 
         if (active) setLoading(false);
       }
     };
-
     renderThumbnail();
     return () => { active = false; };
   }, [file, pageIndex]);
@@ -82,8 +77,8 @@ const PagePreview = ({ file, pageIndex }: { file: File; pageIndex: number }) => 
   );
 };
 
-export const SplitTool: React.FC = () => {
-  const [sourceFile, setSourceFile] = useState<File | null>(null);
+export const SplitTool: React.FC<SplitToolProps> = ({ initialFile }) => {
+  const [sourceFile, setSourceFile] = useState<File | null>(initialFile || null);
   const [totalPageCount, setTotalPageCount] = useState(0);
   const [extractionRanges, setExtractionRanges] = useState<PageRange[]>([{ start: '1', end: '', id: '1' }]);
   const [mergeOutput, setMergeOutput] = useState(false);
@@ -110,7 +105,6 @@ export const SplitTool: React.FC = () => {
   const onExecuteSplit = async () => {
     if (!sourceFile) return;
     setIsProcessing(true);
-    
     try {
       const validRanges = extractionRanges.map(r => {
         const start = Math.max(1, parseInt(r.start) || 1);
@@ -118,12 +112,10 @@ export const SplitTool: React.FC = () => {
         const end = Math.min(totalPageCount, isNaN(endValue) ? start : endValue);
         return { start, end };
       }).filter(r => r.start <= r.end);
-
       if (validRanges.length === 0) {
         toast({ variant: "destructive", title: "Invalid Ranges", description: "Please check your page ranges." });
         return;
       }
-
       if (mergeOutput) {
         const data = await extractAndMergePDFRanges(sourceFile, validRanges);
         triggerDownload(data, `split_merged_${sourceFile.name}`);
@@ -210,16 +202,6 @@ export const SplitTool: React.FC = () => {
                    </div>
                  </div>
               </div>
-           </div>
-
-           <div className="glass-card p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-500/5 border-emerald-100 dark:border-emerald-500/10">
-              <div className="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400 mb-2">
-                <Info className="w-4 h-4" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Privacy</span>
-              </div>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
-                Processing occurs locally in your browser. No files are uploaded to any server.
-              </p>
            </div>
         </div>
 

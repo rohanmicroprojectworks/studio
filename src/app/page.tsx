@@ -23,6 +23,7 @@ type ActiveTool = 'merge' | 'split' | 'compress' | 'image-converter' | 'pdf-view
 
 export default function PDFWorkspace() {
   const [activeTool, setActiveTool] = useState<ActiveTool>(null);
+  const [preloadedFile, setPreloadedFile] = useState<File | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   useEffect(() => {
@@ -79,21 +80,30 @@ export default function PDFWorkspace() {
     },
   ];
 
+  const handleToolSwitch = (toolId: ActiveTool, file?: File) => {
+    setPreloadedFile(file || null);
+    setActiveTool(toolId);
+  };
+
   const renderActiveWorkspace = () => {
     switch (activeTool) {
-      case 'merge': return <MergeTool />;
-      case 'split': return <SplitTool />;
-      case 'compress': return <CompressTool />;
+      case 'merge': return <MergeTool initialFile={preloadedFile} />;
+      case 'split': return <SplitTool initialFile={preloadedFile} />;
+      case 'compress': return <CompressTool initialFile={preloadedFile} />;
       case 'image-converter': return <ImageConverterTool />;
-      case 'pdf-viewer': return <PDFViewerTool onExit={() => setActiveTool(null)} />;
-      case 'protect': return <ProtectTool />;
+      case 'pdf-viewer': return (
+        <PDFViewerTool 
+          onExit={() => setActiveTool(null)} 
+          onSwitchTool={handleToolSwitch}
+        />
+      );
+      case 'protect': return <ProtectTool initialFile={preloadedFile} />;
       default: return null;
     }
   };
 
   return (
     <div className="h-[100dvh] flex flex-col font-body overflow-hidden text-slate-900 dark:text-slate-100 selection:bg-secondary/20 relative bg-transparent">
-      {/* Hide global header if PDF Viewer is active to maximize immersion */}
       <AnimatePresence>
         {activeTool !== 'pdf-viewer' && (
           <motion.header 
@@ -207,7 +217,10 @@ export default function PDFWorkspace() {
                 <div className="mb-4 flex items-center shrink-0">
                   <Button 
                     variant="ghost" 
-                    onClick={() => setActiveTool(null)}
+                    onClick={() => {
+                      setActiveTool(null);
+                      setPreloadedFile(null);
+                    }}
                     className="rounded-2xl w-10 h-10 p-0 glass-button hover:bg-white/80 dark:hover:bg-white/20 shadow-md border-white/40 dark:border-white/10"
                   >
                     <ArrowLeft className="w-5 h-5" />
