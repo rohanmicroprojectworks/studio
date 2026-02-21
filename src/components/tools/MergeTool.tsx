@@ -27,18 +27,21 @@ export const MergeTool: React.FC<MergeToolProps> = ({ initialFile }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Only add the initial file once to prevent duplication bug
+    // Correctly handle state initialization to prevent duplication when transitioning from the viewer
     if (initialFile && !initializedRef.current) {
-      const newItem = {
-        file: initialFile,
-        id: crypto.randomUUID(),
-        name: initialFile.name,
-        size: initialFile.size
-      };
-      setFileList([newItem]);
+      const alreadyExists = fileList.some(item => item.name === initialFile.name && item.size === initialFile.size);
+      if (!alreadyExists) {
+        const newItem = {
+          file: initialFile,
+          id: crypto.randomUUID(),
+          name: initialFile.name,
+          size: initialFile.size
+        };
+        setFileList([newItem]);
+      }
       initializedRef.current = true;
     }
-  }, [initialFile]);
+  }, [initialFile, fileList]);
 
   const onFilesAdded = (selectedFiles: File[]) => {
     const newItems = selectedFiles.map(file => ({

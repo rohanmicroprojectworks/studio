@@ -53,7 +53,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [pdfDoc, setPdfDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [zoom, setZoom] = useState(1.0); 
+  const [zoom, setZoom] = useState(1.0); // Exact 100% scale
   const [showThumbnails, setShowThumbnails] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -80,7 +80,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
           const pdf = await loadingTask.promise;
           setPdfDoc(pdf);
           setCurrentPage(1);
-          setZoom(1.0); // Reset to 100% on load
+          setZoom(1.0); // Ensure initialization at 100%
         } catch (err) {
           toast({ variant: "destructive", title: "Load Failed", description: "This file is encrypted or invalid." });
           setSourceFile(null);
@@ -105,6 +105,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
           canvas.width = viewport.width * dpr;
           canvas.style.height = `${viewport.height}px`;
           canvas.style.width = `${viewport.width}px`;
+          context.setTransform(1, 0, 0, 1, 0, 0);
           context.scale(dpr, dpr);
           await page.render({ canvasContext: context, viewport }).promise;
         }
@@ -118,19 +119,19 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
     renderPage();
   }, [renderPage]);
 
-  // Native Trackpad & Mouse Wheel Zooming
+  // Gestures: Scale document without affecting the overall browser zoom level
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
     
     const handleWheel = (e: WheelEvent) => {
-      if (e.ctrlKey) {
+      if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
-        const zoomStep = 0.08;
+        const zoomStep = 0.05;
         const delta = e.deltaY > 0 ? -zoomStep : zoomStep;
         setZoom((prev) => {
            const next = prev + delta;
-           return Math.min(6, Math.max(0.1, next));
+           return Math.min(5, Math.max(0.1, next));
         });
       }
     };
@@ -139,7 +140,6 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
     return () => container.removeEventListener('wheel', handleWheel);
   }, []);
 
-  // Control visibility logic
   useEffect(() => {
     const handleMouseMove = () => {
       setControlsVisible(true);
@@ -210,13 +210,13 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
         <Button 
           variant="ghost" 
           onClick={() => onExit?.()} 
-          className="absolute top-8 left-8 h-12 w-12 rounded-full glass hover:bg-white/40 shadow-2xl z-50 flex items-center justify-center"
+          className="absolute top-8 left-8 h-12 w-12 rounded-full glass hover:bg-white/40 shadow-2xl z-50 flex items-center justify-center border-white/40"
         >
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div className="w-full max-w-4xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="text-center space-y-2">
-            <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Immersive Viewer</h2>
+            <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight uppercase">Immersive Viewer</h2>
             <p className="text-slate-500 dark:text-slate-400 font-bold">Hardware-accelerated PDF reading experience.</p>
           </div>
           <FileUpload onFilesSelected={(f) => setSourceFile(f[0])} className="h-[450px]" />
@@ -241,7 +241,6 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
             exit={{ y: -60, opacity: 0 }}
             className="absolute top-8 left-0 w-full px-8 z-50 flex items-center justify-between pointer-events-none"
           >
-            {/* Left Zone: Navigation */}
             <div className="flex items-center space-x-3 pointer-events-auto">
               <Button 
                 variant="ghost" 
@@ -264,7 +263,6 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
               </Button>
             </div>
 
-            {/* Right Zone: Commands */}
             <div className="flex items-center space-x-3 pointer-events-auto">
               <AnimatePresence>
                 {showSearchInput && (
@@ -293,7 +291,6 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
                 )}
               </AnimatePresence>
 
-              {/* Action Hub */}
               <div className="relative group">
                 <div className="h-14 w-14 glass flex items-center justify-center rounded-full cursor-pointer hover:scale-110 transition-all duration-500 border-white/40 shadow-2xl">
                   <MoreVertical className="w-6 h-6" />
@@ -349,8 +346,8 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
             </div>
           ) : (
             <div className="py-24 px-10 h-fit">
-              <div className="shadow-[0_40px_100px_-20px_rgba(0,0,0,0.1)] bg-white dark:bg-zinc-900 rounded-sm">
-                <canvas ref={canvasRef} className="block" />
+              <div className="shadow-[0_40px_100px_-20px_rgba(0,0,0,0.1)] bg-white dark:bg-zinc-900 rounded-sm overflow-hidden">
+                <canvas ref={canvasRef} className="block transition-transform duration-75" />
               </div>
             </div>
           )}
@@ -376,7 +373,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
                 <div className="px-3 min-w-[70px] text-center">
                   <span className="text-[11px] font-black tabular-nums">{Math.round(zoom * 100)}%</span>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => setZoom(prev => Math.min(6, prev + 0.15))} className="h-10 w-10"><ZoomIn className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" onClick={() => setZoom(prev => Math.min(5, prev + 0.15))} className="h-10 w-10"><ZoomIn className="w-4 h-4" /></Button>
               </div>
             </motion.div>
           )}
