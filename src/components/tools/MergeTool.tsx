@@ -27,7 +27,7 @@ export const MergeTool: React.FC<MergeToolProps> = ({ initialFile }) => {
 
   useEffect(() => {
     // Only add the initial file once on mount to prevent duplication
-    if (initialFile && !initializedRef.current) {
+    if (initialFile && !initializedRef.current && fileList.length === 0) {
       const newItem = {
         file: initialFile,
         id: crypto.randomUUID(),
@@ -37,7 +37,7 @@ export const MergeTool: React.FC<MergeToolProps> = ({ initialFile }) => {
       setFileList([newItem]);
       initializedRef.current = true;
     }
-  }, [initialFile]);
+  }, [initialFile, fileList.length]);
 
   const onFilesAdded = (selectedFiles: File[]) => {
     const newItems = selectedFiles.map(file => ({

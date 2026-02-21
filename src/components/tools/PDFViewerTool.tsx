@@ -52,7 +52,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [pdfDoc, setPdfDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [zoom, setZoom] = useState(1.0); // Reset to 100%
+  const [zoom, setZoom] = useState(1.0); // Explicitly 100% on load
   const [showThumbnails, setShowThumbnails] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -79,7 +79,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
           const pdf = await loadingTask.promise;
           setPdfDoc(pdf);
           setCurrentPage(1);
-          setZoom(1.0); // Explicitly 100% on load
+          setZoom(1.0); // Reset to 100% when new file is loaded
         } catch (err) {
           toast({ variant: "destructive", title: "Load Failed", description: "This file is encrypted or invalid." });
           setSourceFile(null);
@@ -125,7 +125,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
     const handleWheel = (e: WheelEvent) => {
       if (e.ctrlKey) {
         e.preventDefault();
-        const zoomStep = 0.08;
+        const zoomStep = 0.1;
         const delta = e.deltaY > 0 ? -zoomStep : zoomStep;
         setZoom((prev) => Math.min(6, Math.max(0.2, prev + delta)));
       }
