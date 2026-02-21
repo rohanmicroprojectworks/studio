@@ -1,25 +1,24 @@
+
 /**
- * @fileoverview Enhanced PSD Processing Service
- * Responsibility: Handle high-fidelity PSD parsing using composite canvas extraction.
+ * @fileoverview Robust Multi-Engine PSD Processing Service
+ * Responsibility: High-fidelity PSD parsing with a multi-engine fallback system (ag-psd -> PSD.js).
  * Author: GlassPDF Team
  * License: MIT
  */
 
 import { readPsd } from 'ag-psd';
+import PSD from 'psd';
 import { PDFDocument } from 'pdf-lib';
 
 /**
  * Parses a PSD file and returns its composite (flattened) canvas.
- * Optimized to skip layer-specific metadata parsing to avoid "Not Implemented" errors.
+ * Implements a dual-engine fallback system to ensure maximum compatibility.
  */
 export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> => {
   const buffer = await file.arrayBuffer();
+
+  // Engine 1: ag-psd (Primary, faster for modern standard PSDs)
   try {
-    /**
-     * readCanvas: true extracts the pre-rendered flattened image stored in the PSD.
-     * readLayers: false is critical to prevent the library from hitting unsupported 
-     * layer mask data or effects that are not implemented in browser environments.
-     */
     const psd = readPsd(buffer, { 
       readCanvas: true, 
       readLayers: false,
@@ -27,18 +26,22 @@ export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> 
       skipThumbnail: true
     });
     
-    if (!psd.canvas) {
-      throw new Error('This PSD does not contain a composite image. Ensure it was saved with "Maximize Compatibility" enabled in Photoshop.');
-    }
+    if (psd.canvas) return psd.canvas;
+  } catch (agError) {
+    console.warn('[PSD Service] Primary engine (ag-psd) failed, trying fallback engine...', agError);
+  }
+
+  // Engine 2: PSD.js (Compatibility Fallback for complex metadata/layer structures)
+  try {
+    const psd = new PSD(new Uint8Array(buffer));
+    psd.parse();
+    const canvas = psd.image.toCanvas();
     
-    return psd.canvas;
-  } catch (error: any) {
-    console.error('[PSD Service] Parsing failure:', error);
-    // Provide a more helpful error message for common PSD issues
-    const message = error.message?.toLowerCase().includes('layer mask') 
-      ? 'Complex layer data detected. Please ensure "Maximize Compatibility" was enabled when saving this PSD.'
-      : error.message || 'The file structure is incompatible with browser-native rendering.';
-    throw new Error(message);
+    if (canvas) return canvas;
+    throw new Error('Canvas extraction failed in fallback engine.');
+  } catch (psdError) {
+    console.error('[PSD Service] Fallback engine (PSD.js) also failed:', psdError);
+    throw new Error('This PSD is highly complex or missing a flattened composite image. Please ensure "Maximize Compatibility" is enabled in Photoshop.');
   }
 };
 

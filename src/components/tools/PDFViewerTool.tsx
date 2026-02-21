@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Immersive High-Fidelity PDF Viewer Tool
  * Responsibility: Browser-native PDF viewing with hardware-accelerated zoom and auto-hiding controls.
@@ -79,7 +80,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
           const pdf = await loadingTask.promise;
           setPdfDoc(pdf);
           setCurrentPage(1);
-          setZoom(1.0); 
+          setZoom(1.0); // Reset to 100% on load
         } catch (err) {
           toast({ variant: "destructive", title: "Load Failed", description: "This file is encrypted or invalid." });
           setSourceFile(null);

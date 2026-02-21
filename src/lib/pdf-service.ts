@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Enhanced Maximum-Purge PDF Processing Service
  * Responsibility: Core logic for aggressive PDF manipulation and structural optimization.
@@ -107,9 +108,8 @@ export const compressPDFDocument = async (
   
   // Strip all non-essential metadata for High/Maximum Purge
   if (level === 'high') {
-    compressedPdf.setProducer('GlassPDF Ultra-Purge Engine 3.0');
+    compressedPdf.setProducer('GlassPDF Ultra-Purge Engine 4.0');
     compressedPdf.setCreator('GlassPDF Studio');
-    // Purging metadata titles/authors can save significant bytes in small PDFs
     compressedPdf.setTitle('');
     compressedPdf.setAuthor('');
     compressedPdf.setSubject('');
