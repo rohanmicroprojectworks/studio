@@ -17,14 +17,14 @@ export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> 
   try {
     /**
      * readCanvas: true extracts the pre-rendered flattened image stored in the PSD.
-     * readLayers: false prevents the library from trying to parse complex layer mask data or effects
-     * that might be unsupported in the browser, significantly increasing compatibility.
+     * readLayers: false is critical to prevent the library from hitting unsupported 
+     * layer mask data or effects that are not implemented in browser environments.
      */
     const psd = readPsd(buffer, { 
       readCanvas: true, 
       readLayers: false,
-      skipLayerImageData: true, 
-      skipThumbnail: true 
+      skipLayerImageData: true,
+      skipThumbnail: true
     });
     
     if (!psd.canvas) {
@@ -35,7 +35,7 @@ export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> 
   } catch (error: any) {
     console.error('[PSD Service] Parsing failure:', error);
     // Provide a more helpful error message for common PSD issues
-    const message = error.message?.includes('layer mask') 
+    const message = error.message?.toLowerCase().includes('layer mask') 
       ? 'Complex layer data detected. Please ensure "Maximize Compatibility" was enabled when saving this PSD.'
       : error.message || 'The file structure is incompatible with browser-native rendering.';
     throw new Error(message);

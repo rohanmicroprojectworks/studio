@@ -40,6 +40,7 @@ export const PSDViewerTool: React.FC = () => {
     const file = files[0];
     setSourceFile(file);
     setIsProcessing(true);
+    setRenderedCanvas(null); // Reset canvas before load
     try {
       const canvas = await renderPSDToCanvas(file);
       setRenderedCanvas(canvas);
@@ -88,7 +89,7 @@ export const PSDViewerTool: React.FC = () => {
         <Button 
           variant="ghost" 
           onClick={() => window.location.reload()} 
-          className="absolute -top-4 -left-4 h-12 w-12 rounded-full glass hover:bg-white/40 shadow-xl"
+          className="absolute -top-4 -left-4 h-12 w-12 rounded-full glass hover:bg-white/40 shadow-xl z-50 flex items-center justify-center"
         >
           <ArrowLeft className="w-5 h-5" />
         </Button>

@@ -26,8 +26,8 @@ export const MergeTool: React.FC<MergeToolProps> = ({ initialFile }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Only add the initial file once on mount to prevent duplication
-    if (initialFile && !initializedRef.current && fileList.length === 0) {
+    // Only add the initial file once to prevent duplication bug
+    if (initialFile && !initializedRef.current) {
       const newItem = {
         file: initialFile,
         id: crypto.randomUUID(),
@@ -37,7 +37,7 @@ export const MergeTool: React.FC<MergeToolProps> = ({ initialFile }) => {
       setFileList([newItem]);
       initializedRef.current = true;
     }
-  }, [initialFile, fileList.length]);
+  }, [initialFile]);
 
   const onFilesAdded = (selectedFiles: File[]) => {
     const newItems = selectedFiles.map(file => ({
@@ -106,7 +106,7 @@ export const MergeTool: React.FC<MergeToolProps> = ({ initialFile }) => {
           <p className="text-slate-500 dark:text-slate-400 font-semibold mt-1">Drag handles to rearrange your documents before merging.</p>
         </div>
         <div className="flex space-x-4 w-full md:w-auto">
-           <Button variant="outline" onClick={() => setFileList([])} className="glass-button h-14 px-8 rounded-[1.5rem] font-black uppercase tracking-widest text-xs flex-1 md:flex-none">
+           <Button variant="outline" onClick={() => { setFileList([]); initializedRef.current = false; }} className="glass-button h-14 px-8 rounded-[1.5rem] font-black uppercase tracking-widest text-xs flex-1 md:flex-none">
             Reset
            </Button>
            <button 
