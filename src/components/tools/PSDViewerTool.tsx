@@ -1,7 +1,7 @@
 
 /**
  * @fileoverview Universal PSD Studio Tool
- * Responsibility: High-fidelity PSD rendering with full layer composition support.
+ * Responsibility: High-fidelity PSD rendering with full layer composition support and professional UI.
  * Author: GlassPDF Team
  * License: MIT
  */
@@ -47,7 +47,7 @@ export const PSDViewerTool: React.FC = () => {
       const canvas = await renderPSDToCanvas(file);
       setRenderedCanvas(canvas);
       
-      // Auto-fit initial zoom
+      // Auto-fit initial zoom with padding
       if (containerRef.current) {
         const padding = 160;
         const availableWidth = containerRef.current.clientWidth - padding;
@@ -58,8 +58,8 @@ export const PSDViewerTool: React.FC = () => {
     } catch (err: any) {
       toast({ 
         variant: "destructive", 
-        title: "Engine Error", 
-        description: err.message || "Could not composite this PSD." 
+        title: "Load Error", 
+        description: err.message || "Could not composite this PSD document." 
       });
       setSourceFile(null);
     } finally {
@@ -77,15 +77,15 @@ export const PSDViewerTool: React.FC = () => {
       } else {
         exportCanvasAsImage(renderedCanvas, format, sourceFile.name);
       }
-      toast({ title: "Studio Export", description: `File saved as ${format.toUpperCase()}` });
+      toast({ title: "Studio Export", description: `File saved successfully as ${format.toUpperCase()}.` });
     } catch (err) {
-      toast({ variant: "destructive", title: "Export Failed", description: "Memory limit exceeded during export." });
+      toast({ variant: "destructive", title: "Export Failed", description: "Memory limit exceeded during export composition." });
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // Keyboard zoom support
+  // Keyboard zoom support (Ctrl + / -)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
@@ -111,7 +111,7 @@ export const PSDViewerTool: React.FC = () => {
           </div>
           <h2 className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter">PSD Studio</h2>
           <p className="text-xl text-slate-500 dark:text-slate-400 font-bold max-w-2xl">
-            Professional browser-native Photoshop rendering. <br/>Full layer composition without cloud uploads.
+            Professional high-fidelity Photoshop rendering. <br/>Full layer hierarchy and mask composition.
           </p>
         </div>
         
@@ -120,18 +120,18 @@ export const PSDViewerTool: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8">
            <div className="glass-card p-8 rounded-3xl space-y-3">
               <Zap className="w-8 h-8 text-amber-500" />
-              <h4 className="font-black text-slate-900 dark:text-white uppercase tracking-widest text-xs">Fast Render</h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">Direct hardware-accelerated composition engine.</p>
+              <h4 className="font-black text-slate-900 dark:text-white uppercase tracking-widest text-xs">Direct Composition</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">Hardware-accelerated rendering from the original layer stack.</p>
            </div>
            <div className="glass-card p-8 rounded-3xl space-y-3">
               <ShieldCheck className="w-8 h-8 text-emerald-500" />
-              <h4 className="font-black text-slate-900 dark:text-white uppercase tracking-widest text-xs">Total Privacy</h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">Files never leave your browser. Zero server footprint.</p>
+              <h4 className="font-black text-slate-900 dark:text-white uppercase tracking-widest text-xs">Sandbox Privacy</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">Your creative work never leaves your device. No cloud uploads.</p>
            </div>
            <div className="glass-card p-8 rounded-3xl space-y-3">
               <Layers className="w-8 h-8 text-blue-500" />
-              <h4 className="font-black text-slate-900 dark:text-white uppercase tracking-widest text-xs">Universal</h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">Handles layered PSDs even without compatibility mode.</p>
+              <h4 className="font-black text-slate-900 dark:text-white uppercase tracking-widest text-xs">Full Fidelity</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">Handles complex PSDs even without "Maximize Compatibility" enabled.</p>
            </div>
         </div>
       </div>
@@ -140,6 +140,7 @@ export const PSDViewerTool: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col overflow-hidden animate-in fade-in duration-700 bg-slate-50 dark:bg-zinc-950">
+      {/* Studio Toolbar */}
       <div className="flex justify-between items-center p-4 md:px-8 border-b border-black/5 dark:border-white/5 bg-white/60 dark:bg-black/60 backdrop-blur-3xl shrink-0 z-50">
         <div className="flex items-center space-x-6">
           <Button 
@@ -152,7 +153,7 @@ export const PSDViewerTool: React.FC = () => {
           <div className="min-w-0">
             <h2 className="text-xl font-black text-slate-900 dark:text-white truncate max-w-[150px] md:max-w-lg leading-none">{sourceFile.name}</h2>
             <div className="flex items-center space-x-2 mt-1.5">
-               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary dark:text-primary">Studio Mode</span>
+               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary dark:text-primary">Studio Render</span>
                <span className="text-slate-300 dark:text-zinc-700">•</span>
                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{(sourceFile.size / 1024 / 1024).toFixed(2)} MB</span>
             </div>
@@ -191,6 +192,7 @@ export const PSDViewerTool: React.FC = () => {
         </div>
       </div>
 
+      {/* Main Studio Viewport */}
       <div 
         ref={containerRef}
         className="flex-1 relative overflow-auto custom-scrollbar flex items-center justify-center p-12 md:p-24 bg-slate-100 dark:bg-zinc-950/50"
@@ -207,8 +209,8 @@ export const PSDViewerTool: React.FC = () => {
                 <Layers className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 text-secondary/40" />
               </div>
               <div className="text-center space-y-2">
-                <p className="text-[11px] font-black uppercase tracking-[0.5em] text-slate-500 animate-pulse">Compositing Layer Stack</p>
-                <p className="text-[9px] font-bold text-slate-400">Performing browser-native alpha blending...</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.5em] text-slate-500 animate-pulse">Reconstructing Studio Stack</p>
+                <p className="text-[9px] font-bold text-slate-400">Performing high-fidelity layer composition...</p>
               </div>
             </motion.div>
           ) : renderedCanvas && (

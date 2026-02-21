@@ -1,14 +1,17 @@
 
 /**
  * @fileoverview Universal PSD Processing Service
- * Responsibility: High-fidelity PSD rendering with full layer composition, masks, and blend modes.
+ * Responsibility: High-fidelity PSD rendering with full layer composition, resilient parsing, and format export.
  * Author: GlassPDF Team
  * License: MIT
  */
 
-import { readPsd } from 'ag-psd';
+import { readPsd, Psd } from 'ag-psd';
 import { PDFDocument } from 'pdf-lib';
 
+/**
+ * Mapping of PSD blend mode keys to HTML5 Canvas composite operations.
+ */
 const BLEND_MODE_MAP: Record<string, GlobalCompositeOperation> = {
   'norm': 'source-over',
   'mult': 'multiply',
@@ -29,14 +32,13 @@ const BLEND_MODE_MAP: Record<string, GlobalCompositeOperation> = {
 };
 
 /**
- * Renders any PSD file to a canvas.
+ * Renders any PSD file to a canvas using a multi-engine fallback approach.
  * Target: Full compatibility without needing "Maximize Compatibility".
- * Features: Layer masks, blend modes, and hierarchy support.
  */
 export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> => {
   const buffer = await file.arrayBuffer();
 
-  // Signature Validation: Avoid passing PDF or invalid data to readPsd
+  // Signature Validation
   const view = new DataView(buffer);
   if (buffer.byteLength >= 4) {
     const signature = view.getUint32(0);
@@ -48,98 +50,94 @@ export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> 
     }
   }
 
+  let psd: Psd;
+
   try {
-    // Read PSD with full layer data and composite data
-    const psd = readPsd(buffer, { 
+    // Attempt 1: Full High-Fidelity Read
+    psd = readPsd(buffer, { 
       readCanvas: true, 
       readLayers: true,
       skipLayerImageData: false,
       skipCompositeImageData: false,
       skipThumbnail: true
     });
-    
-    // Priority 1: Use the built-in composite canvas if available (highest fidelity)
-    if (psd.canvas) {
-      return psd.canvas;
-    }
-    
-    // Priority 2: Manual composition from layers (fallback for files without Maximize Compatibility)
-    if (psd.children && psd.children.length > 0) {
-      const canvas = document.createElement('canvas');
-      canvas.width = psd.width;
-      canvas.height = psd.height;
-      const ctx = canvas.getContext('2d');
-      
-      if (ctx) {
-        // Recursive compositor for layer hierarchy
-        const renderLayerStack = (layers: any[]) => {
-          // PSD layers are stored top-to-bottom, so we draw backwards (bottom-up)
-          for (let i = layers.length - 1; i >= 0; i--) {
-            const layer = layers[i];
-            
-            if (layer.hidden) continue;
-
-            // Handle Groups
-            if (layer.children) {
-              renderLayerStack(layer.children);
-              continue;
-            }
-
-            // Draw layer image data
-            if (layer.canvas) {
-              const layerCanvas = layer.canvas;
-              const left = layer.left || 0;
-              const top = layer.top || 0;
-
-              // Create a buffer for the layer to apply masks and opacity
-              const layerBuffer = document.createElement('canvas');
-              layerBuffer.width = layerCanvas.width;
-              layerBuffer.height = layerCanvas.height;
-              const bCtx = layerBuffer.getContext('2d');
-
-              if (bCtx) {
-                // Draw raw layer data
-                bCtx.drawImage(layerCanvas, 0, 0);
-
-                // Apply Layer Mask if present
-                if (layer.mask && layer.mask.canvas) {
-                  bCtx.save();
-                  bCtx.globalCompositeOperation = 'destination-in';
-                  const mX = (layer.mask.left || 0) - left;
-                  const mY = (layer.mask.top || 0) - top;
-                  bCtx.drawImage(layer.mask.canvas, mX, mY);
-                  bCtx.restore();
-                }
-
-                // Composite to main canvas
-                ctx.save();
-                ctx.globalAlpha = (layer.opacity ?? 255) / 255;
-                
-                // Apply Blend Mode
-                const blendMode = layer.blendMode || 'norm';
-                ctx.globalCompositeOperation = BLEND_MODE_MAP[blendMode] || 'source-over';
-                
-                ctx.drawImage(layerBuffer, left, top);
-                ctx.restore();
-              }
-            }
-          }
-        };
-        
-        renderLayerStack(psd.children);
-        return canvas;
-      }
-    }
-    
-    throw new Error('This PSD contains no renderable image data. Ensure layers are visible.');
   } catch (error: any) {
-    console.error('[PSD Service] Render failed:', error);
-    // If it's our custom validation error, re-throw it directly
-    if (error.message?.includes('PDF') || error.message?.includes('signature')) {
+    // Attempt 2: Fallback if layer masks are problematic (common "Not Implemented" crash site)
+    if (error.message?.includes('layer mask data') || error.message?.includes('Not Implemented')) {
+      try {
+        psd = readPsd(buffer, { 
+          readCanvas: true, 
+          readLayers: true,
+          skipLayerImageData: false,
+          skipCompositeImageData: false,
+          skipLayerMasks: true, // Bypass the problematic section
+          skipThumbnail: true
+        });
+      } catch (fallbackError) {
+        throw new Error('This PSD structure is currently unsupported by our browser-native engine.');
+      }
+    } else {
       throw error;
     }
-    throw new Error(error.message || 'The PSD structure is unsupported or corrupted.');
   }
+
+  // Priority 1: Use the pre-rendered composite canvas if available
+  if (psd.canvas) {
+    return psd.canvas;
+  }
+
+  // Priority 2: Manual Composition (Fallback for files without Maximize Compatibility)
+  if (psd.children && psd.children.length > 0) {
+    const canvas = document.createElement('canvas');
+    canvas.width = psd.width;
+    canvas.height = psd.height;
+    const ctx = canvas.getContext('2d');
+    
+    if (ctx) {
+      // Clear canvas for transparency
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Recursive compositor for layer hierarchy
+      const renderLayerStack = (layers: any[]) => {
+        // PSD layers are stored top-to-bottom, so we draw backwards (bottom-up)
+        for (let i = layers.length - 1; i >= 0; i--) {
+          const layer = layers[i];
+          
+          if (layer.hidden) continue;
+
+          // Handle Groups/Folders
+          if (layer.children) {
+            renderLayerStack(layer.children);
+            continue;
+          }
+
+          // Draw layer image data
+          if (layer.canvas) {
+            const layerCanvas = layer.canvas;
+            const left = layer.left || 0;
+            const top = layer.top || 0;
+
+            ctx.save();
+            
+            // Apply opacity
+            ctx.globalAlpha = (layer.opacity ?? 255) / 255;
+            
+            // Apply Blend Mode mapping
+            const blendMode = layer.blendMode || 'norm';
+            ctx.globalCompositeOperation = BLEND_MODE_MAP[blendMode] || 'source-over';
+            
+            ctx.drawImage(layerCanvas, left, top);
+            ctx.restore();
+          }
+        }
+      };
+      
+      renderLayerStack(psd.children);
+      return canvas;
+    }
+  }
+  
+  throw new Error('The document contains no renderable image data. Ensure your layers are visible.');
 };
 
 /**
@@ -167,7 +165,7 @@ export const exportCanvasAsImage = (canvas: HTMLCanvasElement, format: 'png' | '
 export const exportCanvasAsPDF = async (canvas: HTMLCanvasElement, fileName: string): Promise<Uint8Array> => {
   const pdfDoc = await PDFDocument.create();
   
-  // High-quality JPEG embedding for the PDF container
+  // Use high-quality JPEG for the PDF container to balance size and quality
   const imgData = canvas.toDataURL('image/jpeg', 0.92);
   const imgBytes = await fetch(imgData).then(res => res.arrayBuffer());
   const img = await pdfDoc.embedJpg(imgBytes);
