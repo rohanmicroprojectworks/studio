@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Reusable File Upload Component
  * Responsibility: Handle drag-and-drop and input-based file selection with local processing hints.
@@ -38,7 +39,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setDragActive(false);
-    const files = Array.from(e.dataTransfer.files).filter(f => f.type === 'application/pdf');
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type === 'application/pdf' || f.name.endsWith('.psd'));
     if (files.length > 0) {
       onFilesSelected(multiple ? files : [files[0]]);
     }
@@ -54,7 +55,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   return (
     <div
       className={cn(
-        "relative flex flex-col items-center justify-center w-full h-80 border-4 border-dashed rounded-[3rem] transition-all duration-700 ease-[0.16,1,0.3,1]",
+        "relative flex flex-col items-center justify-center w-full h-80 border-4 border-dashed rounded-[3rem] transition-all duration-700 ease-in-out",
         dragActive 
           ? "border-secondary dark:border-primary bg-secondary/5 dark:bg-primary/5 scale-[1.02] shadow-[0_0_80px_rgba(59,130,246,0.1)] dark:shadow-[0_0_80px_rgba(251,146,60,0.1)]" 
           : "border-white/40 dark:border-zinc-800 bg-white/10 dark:bg-zinc-900/10 hover:border-white/60 dark:hover:border-zinc-700 hover:bg-white/20 dark:hover:bg-zinc-800/20",
@@ -68,7 +69,6 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       <input
         type="file"
         multiple={multiple}
-        accept=".pdf"
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
         onChange={onInputChange}
       />
@@ -95,7 +95,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             <p className="text-lg text-slate-500 dark:text-zinc-400 font-bold max-w-md mx-auto leading-tight">
               {dragActive 
                 ? "Release files to begin instant local extraction." 
-                : "Select PDF files from your device to begin secure browser-native processing."
+                : "Select PDF or PSD files from your device to begin secure browser-native processing."
               }
             </p>
           </div>

@@ -30,7 +30,10 @@ export const mergePDFDocuments = async (files: File[]): Promise<Uint8Array> => {
       const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
       copiedPages.forEach((page) => mergedPdf.addPage(page));
     }
-    return await mergedPdf.save({ useObjectStreams: true });
+    return await mergedPdf.save({ 
+      useObjectStreams: true,
+      objectsPerStream: 50 
+    });
   } catch (error) {
     console.error('[PDF Service] Merge failed:', error);
     throw new Error('Failed to merge PDF documents.');
@@ -59,7 +62,10 @@ export const splitPDFDocument = async (
       if (indices.length > 0) {
         const copiedPages = await newPdf.copyPages(sourcePdf, indices);
         copiedPages.forEach((page) => newPdf.addPage(page));
-        results.push(await newPdf.save({ useObjectStreams: true }));
+        results.push(await newPdf.save({ 
+          useObjectStreams: true,
+          objectsPerStream: 50 
+        }));
       }
     }
     return results;
@@ -87,7 +93,10 @@ export const extractAndMergePDFRanges = async (
     const copiedPages = await newPdf.copyPages(sourcePdf, indices);
     copiedPages.forEach((page) => newPdf.addPage(page));
   }
-  return await newPdf.save({ useObjectStreams: true });
+  return await newPdf.save({ 
+    useObjectStreams: true,
+    objectsPerStream: 50 
+  });
 };
 
 /**
@@ -99,30 +108,28 @@ export const compressPDFDocument = async (
   level: 'low' | 'medium' | 'high'
 ): Promise<Uint8Array> => {
   const bytes = await file.arrayBuffer();
-  // Load document context
   const sourcePdf = await PDFDocument.load(bytes, { ignoreEncryption: true });
   
-  // Total Purge Strategy: Create a fresh document and migrate only essential resources
-  // This is the most aggressive browser-native compression method.
+  // Create a fresh container to force total structural re-indexing
   const compressedPdf = await PDFDocument.create();
   
-  // Strip all non-essential metadata for High/Maximum Purge
-  if (level === 'high') {
-    compressedPdf.setProducer('GlassPDF Ultra-Purge Engine 4.0');
+  // High-level structural purge
+  if (level === 'high' || level === 'medium') {
+    compressedPdf.setProducer('GlassPDF Ultra-Purge Engine 5.1');
     compressedPdf.setCreator('GlassPDF Studio');
+    // Clear potentially bulky metadata fields
     compressedPdf.setTitle('');
     compressedPdf.setAuthor('');
     compressedPdf.setSubject('');
-    compressedPdf.setKeywords([]);
   }
 
-  // Migration: pdf-lib natively deduplicates shared objects during this page copy process
   const copiedPages = await compressedPdf.copyPages(sourcePdf, sourcePdf.getPageIndices());
   copiedPages.forEach((page) => compressedPdf.addPage(page));
 
-  // useObjectStreams: Critical for structural reduction. Bundles objects into compressed streams.
+  // Critical: Maximum object stream density for binary reduction
   return await compressedPdf.save({
     useObjectStreams: true,
+    objectsPerStream: 50, // Optimal balance for structural compression
     addDefaultPage: false,
     updateFieldAppearances: false,
     preserveEncryptionGuid: false,
@@ -144,7 +151,10 @@ export const protectPDF = async (file: File, password: string): Promise<Uint8Arr
       copying: true,
     },
   });
-  return await pdf.save({ useObjectStreams: true });
+  return await pdf.save({ 
+    useObjectStreams: true,
+    objectsPerStream: 50 
+  });
 };
 
 /**
@@ -153,7 +163,10 @@ export const protectPDF = async (file: File, password: string): Promise<Uint8Arr
 export const unlockPDF = async (file: File, password: string): Promise<Uint8Array> => {
   const bytes = await file.arrayBuffer();
   const pdf = await PDFDocument.load(bytes, { password });
-  return await pdf.save({ useObjectStreams: true });
+  return await pdf.save({ 
+    useObjectStreams: true,
+    objectsPerStream: 50 
+  });
 };
 
 /**
@@ -174,7 +187,10 @@ export const imagesToPDF = async (files: File[]): Promise<Uint8Array> => {
     const page = pdfDoc.addPage([img.width, img.height]);
     page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
   }
-  return await pdfDoc.save({ useObjectStreams: true });
+  return await pdfDoc.save({ 
+    useObjectStreams: true,
+    objectsPerStream: 50 
+  });
 };
 
 /**

@@ -50,7 +50,6 @@
     "patch-package": "^8.0.0",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "3.11.174",
-    "psd": "^3.4.0",
     "react": "^19.2.1",
     "react-day-picker": "^9.11.3",
     "react-dom": "^19.2.1",

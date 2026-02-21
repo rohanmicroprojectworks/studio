@@ -1,24 +1,24 @@
 
 /**
- * @fileoverview Robust Multi-Engine PSD Processing Service
- * Responsibility: High-fidelity PSD parsing with a multi-engine fallback system (ag-psd -> PSD.js).
+ * @fileoverview High-Performance PSD Processing Service
+ * Responsibility: Browser-native PSD parsing using ag-psd, optimized for composite rendering.
  * Author: GlassPDF Team
  * License: MIT
  */
 
 import { readPsd } from 'ag-psd';
-import PSD from 'psd';
 import { PDFDocument } from 'pdf-lib';
 
 /**
  * Parses a PSD file and returns its composite (flattened) canvas.
- * Implements a dual-engine fallback system to ensure maximum compatibility.
+ * Configured to bypass complex layer data and strictly target the flattened preview.
  */
 export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> => {
   const buffer = await file.arrayBuffer();
 
-  // Engine 1: ag-psd (Primary, faster for modern standard PSDs)
   try {
+    // We only need the composite image (canvas). 
+    // skipLayerImageData and skipThumbnail are set to true to increase performance and avoid parsing errors.
     const psd = readPsd(buffer, { 
       readCanvas: true, 
       readLayers: false,
@@ -26,22 +26,18 @@ export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> 
       skipThumbnail: true
     });
     
-    if (psd.canvas) return psd.canvas;
-  } catch (agError) {
-    console.warn('[PSD Service] Primary engine (ag-psd) failed, trying fallback engine...', agError);
-  }
-
-  // Engine 2: PSD.js (Compatibility Fallback for complex metadata/layer structures)
-  try {
-    const psd = new PSD(new Uint8Array(buffer));
-    psd.parse();
-    const canvas = psd.image.toCanvas();
+    if (psd.canvas) {
+      return psd.canvas;
+    }
     
-    if (canvas) return canvas;
-    throw new Error('Canvas extraction failed in fallback engine.');
-  } catch (psdError) {
-    console.error('[PSD Service] Fallback engine (PSD.js) also failed:', psdError);
-    throw new Error('This PSD is highly complex or missing a flattened composite image. Please ensure "Maximize Compatibility" is enabled in Photoshop.');
+    throw new Error('No composite image found in this PSD. Ensure "Maximize Compatibility" is enabled in Photoshop.');
+  } catch (error: any) {
+    console.error('[PSD Service] Rendering failed:', error);
+    // If ag-psd specifically reports an implementation gap, provide a more helpful message.
+    if (error?.message?.includes('Not Implemented')) {
+      throw new Error('This PSD contains complex features (like specific layer masks) that require "Maximize Compatibility" to be enabled during save for browser preview.');
+    }
+    throw error;
   }
 };
 
@@ -70,7 +66,7 @@ export const exportCanvasAsImage = (canvas: HTMLCanvasElement, format: 'png' | '
 export const exportCanvasAsPDF = async (canvas: HTMLCanvasElement, fileName: string): Promise<Uint8Array> => {
   const pdfDoc = await PDFDocument.create();
   
-  // Convert canvas to image bytes (JPEG for better compression in PDF container)
+  // Use JPEG for PDF embedding to balance quality and file size
   const imgData = canvas.toDataURL('image/jpeg', 0.90);
   const imgBytes = await fetch(imgData).then(res => res.arrayBuffer());
   const img = await pdfDoc.embedJpg(imgBytes);
@@ -83,5 +79,8 @@ export const exportCanvasAsPDF = async (canvas: HTMLCanvasElement, fileName: str
     height: img.height,
   });
   
-  return await pdfDoc.save({ useObjectStreams: true });
+  return await pdfDoc.save({ 
+    useObjectStreams: true,
+    objectsPerStream: 50 
+  });
 };
