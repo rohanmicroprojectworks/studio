@@ -1,6 +1,7 @@
+
 /**
- * @fileoverview PSD Viewer & Studio Tool
- * Responsibility: High-fidelity PSD rendering with batch export options and Apple-style UI.
+ * @fileoverview Universal PSD Studio Tool
+ * Responsibility: High-fidelity PSD rendering with manual composition fallback.
  * Author: GlassPDF Team
  * License: MIT
  */
@@ -13,14 +14,12 @@ import { renderPSDToCanvas, exportCanvasAsImage, exportCanvasAsPDF } from '@/lib
 import { triggerDownload } from '@/lib/pdf-service';
 import { Button } from '@/components/ui/button';
 import { 
-  FileImage, 
   Image as ImageIcon, 
   FileText, 
   Loader2, 
   Maximize2, 
   Minimize2, 
   X,
-  FileOutput,
   Layers,
   ArrowLeft
 } from 'lucide-react';
@@ -40,12 +39,11 @@ export const PSDViewerTool: React.FC = () => {
     const file = files[0];
     setSourceFile(file);
     setIsProcessing(true);
-    setRenderedCanvas(null); // Reset canvas before load
+    setRenderedCanvas(null);
     try {
       const canvas = await renderPSDToCanvas(file);
       setRenderedCanvas(canvas);
       
-      // Initial zoom to fit
       if (containerRef.current) {
         const padding = 120;
         const availableWidth = containerRef.current.clientWidth - padding;
@@ -57,7 +55,7 @@ export const PSDViewerTool: React.FC = () => {
       toast({ 
         variant: "destructive", 
         title: "Load Error", 
-        description: err.message || "Could not open this PSD file." 
+        description: err.message || "Could not render this PSD file." 
       });
       setSourceFile(null);
     } finally {
@@ -89,31 +87,15 @@ export const PSDViewerTool: React.FC = () => {
         <Button 
           variant="ghost" 
           onClick={() => window.location.reload()} 
-          className="absolute -top-4 -left-4 h-12 w-12 rounded-full glass hover:bg-white/40 shadow-xl z-50 flex items-center justify-center"
+          className="absolute -top-4 -left-4 h-12 w-12 rounded-full glass hover:bg-white/40 shadow-xl z-50 flex items-center justify-center border-white/20"
         >
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div className="text-center space-y-2">
           <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">PSD Studio</h2>
-          <p className="text-slate-500 dark:text-slate-400 font-bold">Fast, secure Photoshop preview & local conversion.</p>
+          <p className="text-slate-500 dark:text-slate-400 font-bold">Universal Photoshop rendering. No uploads, no limits.</p>
         </div>
-        <div className="relative flex flex-col items-center justify-center w-full h-96 border-4 border-dashed rounded-[3.5rem] transition-all duration-700 glass overflow-hidden">
-          <input
-            type="file"
-            accept=".psd"
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-            onChange={(e) => e.target.files && handleFileSelect(Array.from(e.target.files))}
-          />
-          <div className="flex flex-col items-center space-y-6 pointer-events-none z-10">
-            <div className="p-10 bg-blue-500/10 dark:bg-orange-500/10 rounded-[3rem] text-blue-600 dark:text-orange-500 shadow-inner">
-              <Layers className="w-14 h-14" />
-            </div>
-            <div className="text-center space-y-2">
-              <p className="text-2xl font-black text-slate-900 dark:text-white">Drop PSD here</p>
-              <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">Supports Flattened Composites</p>
-            </div>
-          </div>
-        </div>
+        <FileUpload onFilesSelected={handleFileSelect} className="h-96" />
       </div>
     );
   }
@@ -125,13 +107,13 @@ export const PSDViewerTool: React.FC = () => {
           <Button 
             variant="ghost" 
             onClick={() => { setSourceFile(null); setRenderedCanvas(null); }}
-            className="rounded-2xl h-11 w-11 glass shadow-md"
+            className="rounded-2xl h-11 w-11 glass shadow-md border-white/20"
           >
             <X className="w-5 h-5" />
           </Button>
           <div className="min-w-0">
             <h2 className="text-lg font-black text-slate-900 dark:text-white truncate max-w-[150px] md:max-w-xs">{sourceFile.name}</h2>
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{(sourceFile.size / 1024 / 1024).toFixed(2)} MB • Local Studio</p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{(sourceFile.size / 1024 / 1024).toFixed(2)} MB • Universal Engine</p>
           </div>
         </div>
 
@@ -147,7 +129,7 @@ export const PSDViewerTool: React.FC = () => {
               disabled={isProcessing} 
               onClick={() => handleExport('png')}
               variant="outline"
-              className="glass-button h-11 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest"
+              className="glass-button h-11 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest border-white/20"
             >
               <ImageIcon className="w-4 h-4 mr-2" /> PNG
             </Button>
@@ -177,7 +159,7 @@ export const PSDViewerTool: React.FC = () => {
               className="flex flex-col items-center space-y-6"
             >
               <Loader2 className="w-16 h-16 animate-spin text-secondary" />
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 animate-pulse">Extracting Data...</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 animate-pulse">Compositing Layers...</p>
             </motion.div>
           ) : renderedCanvas && (
             <motion.div 

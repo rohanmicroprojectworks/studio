@@ -1,7 +1,7 @@
 
 /**
- * @fileoverview Immersive High-Fidelity PDF Viewer Tool
- * Responsibility: Browser-native PDF viewing with hardware-accelerated zoom and auto-hiding controls.
+ * @fileoverview Universal PDF Viewer Tool
+ * Responsibility: Immersive local PDF viewing with hardware-accelerated zoom and 100% start scale.
  * Author: GlassPDF Team
  * License: MIT
  */
@@ -24,7 +24,6 @@ import {
   Sidebar as SidebarIcon,
   X,
   ArrowLeft,
-  FileText,
   MoreVertical,
   Layers,
   Scissors,
@@ -53,12 +52,11 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [pdfDoc, setPdfDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [zoom, setZoom] = useState(1.0); // Exact 100% scale initialization
+  const [zoom, setZoom] = useState(1.0); // Exact 100% start zoom
   const [showThumbnails, setShowThumbnails] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(true);
   const [showSearchInput, setShowSearchInput] = useState(false);
@@ -79,7 +77,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
           const pdf = await loadingTask.promise;
           setPdfDoc(pdf);
           setCurrentPage(1);
-          setZoom(1.0); // Reset to 100% on new file load
+          setZoom(1.0);
         } catch (err) {
           toast({ variant: "destructive", title: "Load Failed", description: "This file is encrypted or invalid." });
           setSourceFile(null);
@@ -95,7 +93,6 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
     if (pdfDoc && canvasRef.current && containerRef.current) {
       try {
         const page = await pdfDoc.getPage(currentPage);
-        // Use a high-quality viewport scale
         const viewport = page.getViewport({ scale: zoom });
         const canvas = canvasRef.current;
         const context = canvas.getContext('2d');
@@ -186,7 +183,6 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
           results.push({ pageNumber: i, text });
         }
       }
-      setSearchResults(results);
       if (results.length > 0) {
         setCurrentPage(results[0].pageNumber);
       } else {
@@ -218,7 +214,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
         <div className="w-full max-w-4xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="text-center space-y-2">
             <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight uppercase">Immersive Viewer</h2>
-            <p className="text-slate-500 dark:text-slate-400 font-bold">Hardware-accelerated PDF reading experience.</p>
+            <p className="text-slate-500 dark:text-slate-400 font-bold">Fast, local document viewing with zero server overhead.</p>
           </div>
           <FileUpload onFilesSelected={(f) => setSourceFile(f[0])} className="h-[450px]" />
         </div>
@@ -247,7 +243,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
                 variant="ghost" 
                 size="icon" 
                 onClick={() => onExit?.()} 
-                className="h-14 w-14 rounded-full glass hover:bg-white/40 border-white/40 shadow-2xl"
+                className="h-14 w-14 rounded-full glass border-white/20 shadow-2xl"
               >
                 <ArrowLeft className="w-6 h-6" />
               </Button>
@@ -256,7 +252,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
                 size="icon" 
                 onClick={() => setShowThumbnails(!showThumbnails)} 
                 className={cn(
-                  "h-14 w-14 rounded-full glass hover:bg-white/40 border-white/40 shadow-2xl",
+                  "h-14 w-14 rounded-full glass border-white/20 shadow-2xl",
                   showThumbnails && "bg-secondary/20 text-secondary"
                 )}
               >
@@ -293,7 +289,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
               </AnimatePresence>
 
               <div className="relative group">
-                <div className="h-14 w-14 glass flex items-center justify-center rounded-full cursor-pointer hover:scale-110 transition-all duration-500 border-white/40 shadow-2xl">
+                <div className="h-14 w-14 glass flex items-center justify-center rounded-full cursor-pointer hover:scale-110 transition-all duration-500 border-white/20 shadow-2xl">
                   <MoreVertical className="w-6 h-6" />
                 </div>
                 
@@ -303,8 +299,8 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
                     <div className="h-px bg-white/10 mx-2"></div>
                     <Button variant="ghost" className="h-11 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest justify-start" onClick={() => quickSwitch('merge')}><Layers className="w-4 h-4 mr-3" /> Merge PDF</Button>
                     <Button variant="ghost" className="h-11 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest justify-start" onClick={() => quickSwitch('split')}><Scissors className="w-4 h-4 mr-3" /> Split PDF</Button>
-                    <Button variant="ghost" className="h-11 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest justify-start" onClick={() => quickSwitch('compress')}><Minimize2 className="w-4 h-4 mr-3" /> Compress</Button>
-                    <Button variant="ghost" className="h-11 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest justify-start" onClick={() => quickSwitch('protect')}><Lock className="w-4 h-4 mr-3" /> Security</Button>
+                    <Button variant="ghost" className="h-11 px-6 rounded-2xl text-[10px) font-black uppercase tracking-widest justify-start" onClick={() => quickSwitch('compress')}><Minimize2 className="w-4 h-4 mr-3" /> Compress</Button>
+                    <Button variant="ghost" className="h-11 px-6 rounded-2xl text-[10px) font-black uppercase tracking-widest justify-start" onClick={() => quickSwitch('protect')}><Lock className="w-4 h-4 mr-3" /> Security</Button>
                   </div>
                 </div>
               </div>
@@ -313,7 +309,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
                 variant="ghost" 
                 size="icon" 
                 onClick={toggleFullscreen} 
-                className="h-14 w-14 rounded-full glass hover:bg-white/40 border-white/40 shadow-2xl"
+                className="h-14 w-14 rounded-full glass border-white/20 shadow-2xl"
               >
                 {isFullscreen ? <Minimize className="w-6 h-6" /> : <Maximize className="w-6 h-6" />}
               </Button>
