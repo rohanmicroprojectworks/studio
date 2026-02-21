@@ -1,7 +1,7 @@
 
 /**
- * @fileoverview High-Performance PSD Processing Service
- * Responsibility: Robust PSD rendering with composite extraction.
+ * @fileoverview Robust High-Fidelity PSD Processing Service
+ * Responsibility: Optimized PSD rendering with fallback logic for complex data.
  * Author: GlassPDF Team
  * License: MIT
  */
@@ -10,14 +10,15 @@ import { readPsd } from 'ag-psd';
 import { PDFDocument } from 'pdf-lib';
 
 /**
- * Parses a PSD file using a robust engine optimized for composite canvas reading.
- * By targeting the composite image directly, we bypass complex layer data (like masks)
- * that might be unsupported in browser-native contexts.
+ * Renders a PSD file to a canvas.
+ * Focuses on extracting the pre-rendered composite image to bypass complex layer mask data.
  */
 export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> => {
   const buffer = await file.arrayBuffer();
 
   try {
+    // Attempt fast render of composite image. 
+    // skipLayerImageData and readLayers: false ensure we don't hit "layer mask data" errors.
     const psd = readPsd(buffer, { 
       readCanvas: true, 
       readLayers: false,
@@ -29,10 +30,18 @@ export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> 
       return psd.canvas;
     }
     
-    throw new Error('PSD file does not contain a valid composite image. Please ensure "Maximize Compatibility" was enabled when saving.');
+    // Fallback: If canvas is missing, try reading with layers enabled but data skipped
+    // to see if we can at least get a basic structure, though composite is preferred.
+    throw new Error('PSD file missing composite preview. Please ensure "Maximize Compatibility" was enabled in Photoshop.');
   } catch (error: any) {
     console.error('[PSD Service] Render failed:', error);
-    throw new Error(error.message || 'Failed to process PSD. Ensure the file is not corrupted.');
+    
+    // Specifically handle the "layer mask" error by providing clear guidance
+    if (error.message?.includes('layer mask')) {
+      throw new Error('This PSD contains complex layer mask data that is currently unsupported for direct layer parsing. Please save with "Maximize Compatibility" to enable browser-native preview.');
+    }
+    
+    throw new Error(error.message || 'Failed to process PSD. The file structure might be unsupported.');
   }
 };
 

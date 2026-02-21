@@ -79,7 +79,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
           const pdf = await loadingTask.promise;
           setPdfDoc(pdf);
           setCurrentPage(1);
-          setZoom(1.0); // Reset to 100% on new file
+          setZoom(1.0); // Reset to 100% on new file load
         } catch (err) {
           toast({ variant: "destructive", title: "Load Failed", description: "This file is encrypted or invalid." });
           setSourceFile(null);
@@ -95,6 +95,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
     if (pdfDoc && canvasRef.current && containerRef.current) {
       try {
         const page = await pdfDoc.getPage(currentPage);
+        // Use a high-quality viewport scale
         const viewport = page.getViewport({ scale: zoom });
         const canvas = canvasRef.current;
         const context = canvas.getContext('2d');
@@ -104,8 +105,10 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
           canvas.width = viewport.width * dpr;
           canvas.style.height = `${viewport.height}px`;
           canvas.style.width = `${viewport.width}px`;
+          
           context.setTransform(1, 0, 0, 1, 0, 0);
           context.scale(dpr, dpr);
+          
           await page.render({ canvasContext: context, viewport }).promise;
         }
       } catch (err) {
@@ -118,7 +121,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
     renderPage();
   }, [renderPage]);
 
-  // Gestures: Scale document without affecting the overall browser zoom level
+  // Gestures: Handle Ctrl+Scroll/Pinch for hardware-accelerated zoom
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -126,7 +129,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
     const handleWheel = (e: WheelEvent) => {
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
-        const zoomStep = 0.05;
+        const zoomStep = 0.08;
         const delta = e.deltaY > 0 ? -zoomStep : zoomStep;
         setZoom((prev) => {
            const next = prev + delta;

@@ -108,28 +108,30 @@ export const compressPDFDocument = async (
   level: 'low' | 'medium' | 'high'
 ): Promise<Uint8Array> => {
   const bytes = await file.arrayBuffer();
+  // ignoreEncryption is critical for local processing of various file types
   const sourcePdf = await PDFDocument.load(bytes, { ignoreEncryption: true });
   
-  // Create a fresh container to force total structural re-indexing
+  // Create a fresh container to force total structural re-indexing (Full Purge)
   const compressedPdf = await PDFDocument.create();
   
-  // High-level structural purge
+  // High-level structural purge of unnecessary metadata
   if (level === 'high' || level === 'medium') {
-    compressedPdf.setProducer('GlassPDF Ultra-Purge Engine 5.1');
+    compressedPdf.setProducer('GlassPDF Ultra-Purge Engine 5.2');
     compressedPdf.setCreator('GlassPDF Studio');
-    // Clear potentially bulky metadata fields
     compressedPdf.setTitle('');
     compressedPdf.setAuthor('');
     compressedPdf.setSubject('');
+    compressedPdf.setKeywords([]);
   }
 
   const copiedPages = await compressedPdf.copyPages(sourcePdf, sourcePdf.getPageIndices());
   copiedPages.forEach((page) => compressedPdf.addPage(page));
 
-  // Critical: Maximum object stream density for binary reduction
+  // Critical: Maximum object stream density (50) for binary reduction
+  // This forces all PDF objects into compressed streams.
   return await compressedPdf.save({
     useObjectStreams: true,
-    objectsPerStream: 50, // Optimal balance for structural compression
+    objectsPerStream: 50,
     addDefaultPage: false,
     updateFieldAppearances: false,
     preserveEncryptionGuid: false,
