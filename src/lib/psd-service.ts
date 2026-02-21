@@ -1,7 +1,7 @@
 
 /**
  * @fileoverview Universal PSD Processing Service
- * Responsibility: High-fidelity PSD rendering with full layer composition support.
+ * Responsibility: High-fidelity PSD rendering with full layer composition, masks, and blend modes.
  * Author: GlassPDF Team
  * License: MIT
  */
@@ -9,13 +9,44 @@
 import { readPsd } from 'ag-psd';
 import { PDFDocument } from 'pdf-lib';
 
+const BLEND_MODE_MAP: Record<string, GlobalCompositeOperation> = {
+  'norm': 'source-over',
+  'mult': 'multiply',
+  'scrn': 'screen',
+  'over': 'overlay',
+  'dark': 'darken',
+  'lite': 'lighten',
+  'colD': 'color-dodge',
+  'colB': 'color-burn',
+  'hLit': 'hard-light',
+  'sLit': 'soft-light',
+  'diff': 'difference',
+  'excl': 'exclusion',
+  'hue ': 'hue',
+  'sat ': 'saturation',
+  'colr': 'color',
+  'lum ': 'luminosity',
+};
+
 /**
  * Renders any PSD file to a canvas.
  * Target: Full compatibility without needing "Maximize Compatibility".
- * Engine: ag-psd with manual layer stack composition fallback.
+ * Features: Layer masks, blend modes, and hierarchy support.
  */
 export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> => {
   const buffer = await file.arrayBuffer();
+
+  // Signature Validation: Avoid passing PDF or invalid data to readPsd
+  const view = new DataView(buffer);
+  if (buffer.byteLength >= 4) {
+    const signature = view.getUint32(0);
+    if (signature === 0x25504446) { // %PDF
+      throw new Error('This is a PDF file. Please use the PDF Viewer tool to open it.');
+    }
+    if (signature !== 0x38425053) { // 8BPS
+      throw new Error('Invalid PSD file signature. Please upload a valid Photoshop (.psd) document.');
+    }
+  }
 
   try {
     // Read PSD with full layer data and composite data
@@ -27,13 +58,12 @@ export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> 
       skipThumbnail: true
     });
     
-    // Priority 1: Use the built-in composite canvas if available (fastest/highest fidelity)
+    // Priority 1: Use the built-in composite canvas if available (highest fidelity)
     if (psd.canvas) {
       return psd.canvas;
     }
     
-    // Priority 2: Manual composition from layers
-    // This removes the "Maximize Compatibility" requirement.
+    // Priority 2: Manual composition from layers (fallback for files without Maximize Compatibility)
     if (psd.children && psd.children.length > 0) {
       const canvas = document.createElement('canvas');
       canvas.width = psd.width;
@@ -41,14 +71,12 @@ export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> 
       const ctx = canvas.getContext('2d');
       
       if (ctx) {
-        // Draw layers from bottom to top recursively
+        // Recursive compositor for layer hierarchy
         const renderLayerStack = (layers: any[]) => {
-          // PSD layers are ordered from top to bottom in children, 
-          // so we iterate backwards to draw bottom-up.
+          // PSD layers are stored top-to-bottom, so we draw backwards (bottom-up)
           for (let i = layers.length - 1; i >= 0; i--) {
             const layer = layers[i];
             
-            // Skip hidden layers
             if (layer.hidden) continue;
 
             // Handle Groups
@@ -58,19 +86,42 @@ export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> 
             }
 
             // Draw layer image data
-            // ag-psd provides 'canvas' for each layer if skipLayerImageData is false
             if (layer.canvas) {
-              ctx.save();
-              ctx.globalAlpha = (layer.opacity ?? 255) / 255;
-              
-              // Apply layer blend mode if possible (Simplified)
-              if (layer.blendMode && ctx.globalCompositeOperation !== undefined) {
-                // Map common PSD blend modes to Canvas globalCompositeOperation if needed
-                // Defaulting to source-over for stability
-              }
+              const layerCanvas = layer.canvas;
+              const left = layer.left || 0;
+              const top = layer.top || 0;
 
-              ctx.drawImage(layer.canvas, layer.left || 0, layer.top || 0);
-              ctx.restore();
+              // Create a buffer for the layer to apply masks and opacity
+              const layerBuffer = document.createElement('canvas');
+              layerBuffer.width = layerCanvas.width;
+              layerBuffer.height = layerCanvas.height;
+              const bCtx = layerBuffer.getContext('2d');
+
+              if (bCtx) {
+                // Draw raw layer data
+                bCtx.drawImage(layerCanvas, 0, 0);
+
+                // Apply Layer Mask if present
+                if (layer.mask && layer.mask.canvas) {
+                  bCtx.save();
+                  bCtx.globalCompositeOperation = 'destination-in';
+                  const mX = (layer.mask.left || 0) - left;
+                  const mY = (layer.mask.top || 0) - top;
+                  bCtx.drawImage(layer.mask.canvas, mX, mY);
+                  bCtx.restore();
+                }
+
+                // Composite to main canvas
+                ctx.save();
+                ctx.globalAlpha = (layer.opacity ?? 255) / 255;
+                
+                // Apply Blend Mode
+                const blendMode = layer.blendMode || 'norm';
+                ctx.globalCompositeOperation = BLEND_MODE_MAP[blendMode] || 'source-over';
+                
+                ctx.drawImage(layerBuffer, left, top);
+                ctx.restore();
+              }
             }
           }
         };
@@ -83,8 +134,9 @@ export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> 
     throw new Error('This PSD contains no renderable image data. Ensure layers are visible.');
   } catch (error: any) {
     console.error('[PSD Service] Render failed:', error);
-    if (error.message?.includes('layer mask data')) {
-      throw new Error('Complex layer mask data detected. Try saving with "Maximize Compatibility" or simplify the masks.');
+    // If it's our custom validation error, re-throw it directly
+    if (error.message?.includes('PDF') || error.message?.includes('signature')) {
+      throw error;
     }
     throw new Error(error.message || 'The PSD structure is unsupported or corrupted.');
   }
