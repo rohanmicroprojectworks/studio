@@ -1,35 +1,36 @@
-
 /**
- * @fileoverview PSD Processing Service
- * Responsibility: Handle PSD parsing and conversion using ag-psd and native canvas APIs.
+ * @fileoverview Enhanced PSD Processing Service
+ * Responsibility: Handle high-fidelity PSD parsing using composite canvas extraction.
  * Author: GlassPDF Team
  * License: MIT
  */
 
-import { readPsd, drawPsd } from 'ag-psd';
+import { readPsd } from 'ag-psd';
 import { PDFDocument } from 'pdf-lib';
 
 /**
- * Parses a PSD file and returns a canvas containing the flattened preview.
+ * Parses a PSD file and returns its composite (flattened) canvas.
+ * This method is significantly faster and more compatible than layer-by-layer rendering.
  */
 export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> => {
   const buffer = await file.arrayBuffer();
   try {
-    // Read the PSD structure
-    const psd = readPsd(buffer, { skipLayerImageData: true, skipThumbnail: true });
+    // readCanvas: true extracts the pre-rendered flattened image stored in the PSD.
+    // skipLayerImageData: true avoids slow parsing of individual layers.
+    const psd = readPsd(buffer, { 
+      readCanvas: true, 
+      skipLayerImageData: true, 
+      skipThumbnail: true 
+    });
     
-    // Create a target canvas
-    const canvas = document.createElement('canvas');
-    canvas.width = psd.width;
-    canvas.height = psd.height;
+    if (!psd.canvas) {
+      throw new Error('This PSD does not contain a composite image. Ensure it was saved with "Maximize Compatibility" enabled.');
+    }
     
-    // Draw the PSD composite onto the canvas
-    drawPsd(psd, canvas);
-    
-    return canvas;
-  } catch (error) {
-    console.error('[PSD Service] Render failed:', error);
-    throw new Error('Could not parse PSD file. It may be using an unsupported feature or version.');
+    return psd.canvas;
+  } catch (error: any) {
+    console.error('[PSD Service] Parsing failure:', error);
+    throw new Error(error.message || 'The file structure is incompatible with browser-native rendering.');
   }
 };
 
@@ -53,17 +54,16 @@ export const exportCanvasAsImage = (canvas: HTMLCanvasElement, format: 'png' | '
 };
 
 /**
- * Converts a PSD render to a PDF document.
+ * Converts a PSD render to an optimized PDF document.
  */
 export const exportCanvasAsPDF = async (canvas: HTMLCanvasElement, fileName: string): Promise<Uint8Array> => {
   const pdfDoc = await PDFDocument.create();
   
-  // Convert canvas to image bytes
-  const imgData = canvas.toDataURL('image/jpeg', 0.95);
+  // Convert canvas to image bytes (JPEG for better compression in PDF container)
+  const imgData = canvas.toDataURL('image/jpeg', 0.90);
   const imgBytes = await fetch(imgData).then(res => res.arrayBuffer());
   const img = await pdfDoc.embedJpg(imgBytes);
   
-  // Add page matched to image dimensions
   const page = pdfDoc.addPage([img.width, img.height]);
   page.drawImage(img, {
     x: 0,
@@ -72,5 +72,5 @@ export const exportCanvasAsPDF = async (canvas: HTMLCanvasElement, fileName: str
     height: img.height,
   });
   
-  return await pdfDoc.save();
+  return await pdfDoc.save({ useObjectStreams: true });
 };
