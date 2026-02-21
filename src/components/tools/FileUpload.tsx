@@ -55,7 +55,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   return (
     <div
       className={cn(
-        "relative flex flex-col items-center justify-center w-full h-80 border-4 border-dashed rounded-[3rem] transition-all duration-700 ease-in-out",
+        "relative flex flex-col items-center justify-center w-full h-80 border-4 border-dashed rounded-[3rem] transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
         dragActive 
           ? "border-secondary dark:border-primary bg-secondary/5 dark:bg-primary/5 scale-[1.02] shadow-[0_0_80px_rgba(59,130,246,0.1)] dark:shadow-[0_0_80px_rgba(251,146,60,0.1)]" 
           : "border-white/40 dark:border-zinc-800 bg-white/10 dark:bg-zinc-900/10 hover:border-white/60 dark:hover:border-zinc-700 hover:bg-white/20 dark:hover:bg-zinc-800/20",

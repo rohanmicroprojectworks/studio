@@ -1,7 +1,7 @@
 
 /**
  * @fileoverview High-Performance PSD Processing Service
- * Responsibility: Dual-engine fallback system (ag-psd + PSD.js) for max compatibility.
+ * Responsibility: Robust PSD rendering with composite extraction.
  * Author: GlassPDF Team
  * License: MIT
  */
@@ -10,14 +10,13 @@ import { readPsd } from 'ag-psd';
 import { PDFDocument } from 'pdf-lib';
 
 /**
- * Parses a PSD file using a robust dual-engine fallback system.
- * 1. Tries ag-psd (Fast engine) with strictly composite canvas reading.
- * 2. If ag-psd fails (e.g. layer mask data), falls back to PSD.js (Compatibility engine).
+ * Parses a PSD file using a robust engine optimized for composite canvas reading.
+ * By targeting the composite image directly, we bypass complex layer data (like masks)
+ * that might be unsupported in browser-native contexts.
  */
 export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> => {
   const buffer = await file.arrayBuffer();
 
-  // Try Fast Engine (ag-psd) - Optimized for Composite Canvas
   try {
     const psd = readPsd(buffer, { 
       readCanvas: true, 
@@ -25,24 +24,15 @@ export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> 
       skipLayerImageData: true,
       skipThumbnail: true
     });
-    if (psd.canvas) return psd.canvas;
-  } catch (error) {
-    console.warn('[PSD Service] Fast engine failed, switching to compatibility fallback...');
-  }
-
-  // Fallback to Compatibility Engine (PSD.js / 'psd' package)
-  try {
-    // Dynamic import to avoid Turbopack coffee-script conflicts during static analysis
-    const PSDModule = await import('psd');
-    const PSD = PSDModule.default || PSDModule;
-    const psdInstance = new (PSD as any)(new Uint8Array(buffer));
-    psdInstance.parse();
-    const canvas = psdInstance.image.toCanvas();
-    if (canvas) return canvas;
-    throw new Error('Fallback engine returned empty canvas');
-  } catch (error) {
-    console.error('[PSD Service] All engines failed:', error);
-    throw new Error('Complex PSD data detected. Ensure "Maximize Compatibility" was enabled in Photoshop.');
+    
+    if (psd.canvas) {
+      return psd.canvas;
+    }
+    
+    throw new Error('PSD file does not contain a valid composite image. Please ensure "Maximize Compatibility" was enabled when saving.');
+  } catch (error: any) {
+    console.error('[PSD Service] Render failed:', error);
+    throw new Error(error.message || 'Failed to process PSD. Ensure the file is not corrupted.');
   }
 };
 

@@ -53,13 +53,12 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [pdfDoc, setPdfDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [zoom, setZoom] = useState(1.0); // Exact 100% scale
+  const [zoom, setZoom] = useState(1.0); // Exact 100% scale initialization
   const [showThumbnails, setShowThumbnails] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [currentSearchIndex, setCurrentSearchIndex] = useState(-1);
   const [isLoading, setIsLoading] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(true);
   const [showSearchInput, setShowSearchInput] = useState(false);
@@ -80,7 +79,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
           const pdf = await loadingTask.promise;
           setPdfDoc(pdf);
           setCurrentPage(1);
-          setZoom(1.0); // Ensure initialization at 100%
+          setZoom(1.0); // Reset to 100% on new file
         } catch (err) {
           toast({ variant: "destructive", title: "Load Failed", description: "This file is encrypted or invalid." });
           setSourceFile(null);
@@ -186,7 +185,6 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
       }
       setSearchResults(results);
       if (results.length > 0) {
-        setCurrentSearchIndex(0);
         setCurrentPage(results[0].pageNumber);
       } else {
         toast({ title: "No Results", description: "Search query not found." });
