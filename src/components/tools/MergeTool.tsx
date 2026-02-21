@@ -7,7 +7,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FileUpload } from './FileUpload';
 import { mergePDFDocuments, triggerDownload, PDFFileMetadata } from '@/lib/pdf-service';
 import { Button } from '@/components/ui/button';
@@ -22,11 +22,20 @@ interface MergeToolProps {
 export const MergeTool: React.FC<MergeToolProps> = ({ initialFile }) => {
   const [fileList, setFileList] = useState<PDFFileMetadata[]>([]);
   const [processing, setProcessing] = useState(false);
+  const initializedRef = useRef(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    if (initialFile) {
-      onFilesAdded([initialFile]);
+    // Only add the initial file once on mount to prevent duplication
+    if (initialFile && !initializedRef.current) {
+      const newItem = {
+        file: initialFile,
+        id: crypto.randomUUID(),
+        name: initialFile.name,
+        size: initialFile.size
+      };
+      setFileList([newItem]);
+      initializedRef.current = true;
     }
   }, [initialFile]);
 

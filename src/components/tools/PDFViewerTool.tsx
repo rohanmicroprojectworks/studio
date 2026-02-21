@@ -84,7 +84,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
           setCurrentPage(1);
           setSearchResults([]);
           setCurrentSearchIndex(-1);
-          setZoom(1.0);
+          setZoom(1.0); // Ensure 100% on load
         } catch (err) {
           toast({ variant: "destructive", title: "Load Failed", description: "Could not open this PDF." });
           setSourceFile(null);
@@ -122,7 +122,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
     renderPage();
   }, [renderPage]);
 
-  // Mouse wheel and trackpad zoom
+  // Mouse wheel and trackpad zoom (Ctrl + Scroll)
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -240,6 +240,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
             exit={{ y: -50, opacity: 0 }}
             className="absolute top-8 left-0 w-full px-8 z-50 flex items-center justify-between pointer-events-none"
           >
+            {/* Top Left: Navigation & Structure */}
             <div className="flex items-center space-x-3 pointer-events-auto">
               <Button 
                 variant="ghost" 
@@ -262,7 +263,9 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
               </Button>
             </div>
 
+            {/* Top Right: Special Tools & Immersion */}
             <div className="flex items-center space-x-3 pointer-events-auto">
+              {/* Search Bar (retractable) */}
               <AnimatePresence>
                 {showSearchInput && (
                   <motion.div 
@@ -291,6 +294,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
                 )}
               </AnimatePresence>
 
+              {/* Action Hub (⋯) Expansion menu anchored right */}
               <div className="relative group">
                 <div className="h-14 w-14 glass flex items-center justify-center rounded-full cursor-pointer hover:scale-110 transition-all duration-500 border-white/40 shadow-2xl">
                   <MoreVertical className="w-6 h-6 text-slate-900 dark:text-white" />
@@ -316,6 +320,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
                 </div>
               </div>
 
+              {/* Full Screen Toggle (Most Right) */}
               <Button 
                 variant="ghost" 
                 size="icon" 
@@ -362,6 +367,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
           )}
         </main>
 
+        {/* Bottom Floating Controls */}
         <AnimatePresence>
           {controlsVisible && (
             <motion.div 
