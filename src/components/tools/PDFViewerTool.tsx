@@ -2,6 +2,7 @@
  * @fileoverview Professional Immersive PDF Viewer Tool
  * Responsibility: Browser-native PDF viewing with Retina-sharp rendering, 
  * Liquid Quick Actions hub, and auto-hiding immersive controls.
+ * Supports mouse wheel/trackpad zoom and tool-switching state preservation.
  * Author: GlassPDF Team
  * License: MIT
  */
@@ -25,7 +26,6 @@ import {
   X,
   ArrowLeft,
   FileText,
-  Download,
   MoreVertical,
   Layers,
   Scissors,
@@ -134,6 +134,27 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
   useEffect(() => {
     renderPage();
   }, [renderPage]);
+
+  // Handle Mouse Wheel and Trackpad Zoom
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      // Pinch-to-zoom on trackpads or Ctrl + Scroll on mouse usually triggers ctrlKey
+      if (e.ctrlKey) {
+        e.preventDefault();
+        const zoomStep = 0.05;
+        // Natural feeling zoom direction
+        const delta = e.deltaY > 0 ? -zoomStep : zoomStep;
+        setZoom((prev) => Math.min(5, Math.max(0.2, prev + delta)));
+      }
+    };
+
+    // Use non-passive to allow e.preventDefault()
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => container.removeEventListener('wheel', handleWheel);
+  }, []);
 
   useEffect(() => {
     const handleMouseMove = () => {
