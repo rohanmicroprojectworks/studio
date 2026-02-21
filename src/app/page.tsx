@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Main Landing Page for GlassPDF
  * Responsibility: Application layout, tool switching, and viewport-responsive state management.
@@ -13,13 +14,14 @@ import { SplitTool } from '@/components/tools/SplitTool';
 import { CompressTool } from '@/components/tools/CompressTool';
 import { ImageConverterTool } from '@/components/tools/ImageConverterTool';
 import { PDFViewerTool } from '@/components/tools/PDFViewerTool';
+import { PSDViewerTool } from '@/components/tools/PSDViewerTool';
 import { ProtectTool } from '@/components/tools/ProtectTool';
-import { ArrowLeft, Layers, Scissors, Minimize2, Github, Image as ImageIcon, Eye, Lock } from 'lucide-react';
+import { ArrowLeft, Layers, Scissors, Minimize2, Github, Image as ImageIcon, Eye, Lock, FileImage } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-type ActiveTool = 'merge' | 'split' | 'compress' | 'image-converter' | 'pdf-viewer' | 'protect' | null;
+type ActiveTool = 'merge' | 'split' | 'compress' | 'image-converter' | 'pdf-viewer' | 'psd-viewer' | 'protect' | null;
 
 export default function PDFWorkspace() {
   const [activeTool, setActiveTool] = useState<ActiveTool>(null);
@@ -58,6 +60,13 @@ export default function PDFWorkspace() {
       themeColor: 'bg-sky-500 dark:bg-orange-400' 
     },
     { 
+      id: 'psd-viewer' as const, 
+      name: 'PSD Studio', 
+      description: 'Preview Photoshop files and export to PNG, JPG, or PDF', 
+      icon: FileImage, 
+      themeColor: 'bg-blue-600 dark:bg-blue-500' 
+    },
+    { 
       id: 'image-converter' as const, 
       name: 'Image Converter', 
       description: 'Convert images to PDF or between formats instantly', 
@@ -91,6 +100,7 @@ export default function PDFWorkspace() {
       case 'split': return <SplitTool initialFile={preloadedFile} />;
       case 'compress': return <CompressTool initialFile={preloadedFile} />;
       case 'image-converter': return <ImageConverterTool />;
+      case 'psd-viewer': return <PSDViewerTool />;
       case 'pdf-viewer': return (
         <PDFViewerTool 
           onExit={() => setActiveTool(null)} 
@@ -105,7 +115,7 @@ export default function PDFWorkspace() {
   return (
     <div className="h-[100dvh] flex flex-col font-body overflow-hidden text-slate-900 dark:text-slate-100 selection:bg-secondary/20 relative bg-transparent">
       <AnimatePresence>
-        {activeTool !== 'pdf-viewer' && (
+        {activeTool !== 'pdf-viewer' && activeTool !== 'psd-viewer' && (
           <motion.header 
             initial={{ y: -60, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -210,10 +220,10 @@ export default function PDFWorkspace() {
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               className={cn(
                 "w-full h-full flex flex-col min-h-0",
-                activeTool !== 'pdf-viewer' && "max-w-7xl mx-auto p-4 md:p-6 lg:p-8"
+                (activeTool !== 'pdf-viewer' && activeTool !== 'psd-viewer') && "max-w-7xl mx-auto p-4 md:p-6 lg:p-8"
               )}
             >
-              {activeTool !== 'pdf-viewer' && (
+              {(activeTool !== 'pdf-viewer' && activeTool !== 'psd-viewer') && (
                 <div className="mb-4 flex items-center shrink-0">
                   <Button 
                     variant="ghost" 
@@ -234,11 +244,11 @@ export default function PDFWorkspace() {
 
               <div className={cn(
                 "flex-1 relative flex flex-col min-h-0",
-                activeTool !== 'pdf-viewer' ? "glass p-4 md:p-8 rounded-[2rem] md:rounded-[3rem] border-white/60 dark:border-white/10 shadow-2xl overflow-hidden" : "w-full"
+                (activeTool !== 'pdf-viewer' && activeTool !== 'psd-viewer') ? "glass p-4 md:p-8 rounded-[2rem] md:rounded-[3rem] border-white/60 dark:border-white/10 shadow-2xl overflow-hidden" : "w-full"
               )}>
                 <div className={cn(
                   "flex-1 flex flex-col min-h-0",
-                  activeTool !== 'pdf-viewer' && "overflow-y-auto custom-scrollbar"
+                  (activeTool !== 'pdf-viewer' && activeTool !== 'psd-viewer') && "overflow-y-auto custom-scrollbar"
                 )}>
                   {renderActiveWorkspace()}
                 </div>
