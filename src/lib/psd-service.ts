@@ -10,27 +10,35 @@ import { PDFDocument } from 'pdf-lib';
 
 /**
  * Parses a PSD file and returns its composite (flattened) canvas.
- * This method is significantly faster and more compatible than layer-by-layer rendering.
+ * Optimized to skip layer-specific metadata parsing to avoid "Not Implemented" errors.
  */
 export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> => {
   const buffer = await file.arrayBuffer();
   try {
-    // readCanvas: true extracts the pre-rendered flattened image stored in the PSD.
-    // skipLayerImageData: true avoids slow parsing of individual layers.
+    /**
+     * readCanvas: true extracts the pre-rendered flattened image stored in the PSD.
+     * readLayers: false prevents the library from trying to parse complex layer mask data or effects
+     * that might be unsupported in the browser, significantly increasing compatibility.
+     */
     const psd = readPsd(buffer, { 
       readCanvas: true, 
+      readLayers: false,
       skipLayerImageData: true, 
       skipThumbnail: true 
     });
     
     if (!psd.canvas) {
-      throw new Error('This PSD does not contain a composite image. Ensure it was saved with "Maximize Compatibility" enabled.');
+      throw new Error('This PSD does not contain a composite image. Ensure it was saved with "Maximize Compatibility" enabled in Photoshop.');
     }
     
     return psd.canvas;
   } catch (error: any) {
     console.error('[PSD Service] Parsing failure:', error);
-    throw new Error(error.message || 'The file structure is incompatible with browser-native rendering.');
+    // Provide a more helpful error message for common PSD issues
+    const message = error.message?.includes('layer mask') 
+      ? 'Complex layer data detected. Please ensure "Maximize Compatibility" was enabled when saving this PSD.'
+      : error.message || 'The file structure is incompatible with browser-native rendering.';
+    throw new Error(message);
   }
 };
 

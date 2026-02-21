@@ -91,32 +91,36 @@ export const extractAndMergePDFRanges = async (
 
 /**
  * Compresses a PDF using aggressive structural re-indexing.
- * Achieve ~70% reduction by forcing total object stream bundling and metadata purging.
+ * Achieve maximum reduction by forcing total object stream bundling and metadata purging.
  */
 export const compressPDFDocument = async (
   file: File, 
   level: 'low' | 'medium' | 'high'
 ): Promise<Uint8Array> => {
   const bytes = await file.arrayBuffer();
-  // Load ignoring encryption to maximize accessibility to internal streams
+  // Load document context
   const sourcePdf = await PDFDocument.load(bytes, { ignoreEncryption: true });
   
   // Total Purge Strategy: Create a fresh document and migrate only essential resources
+  // This is the most aggressive browser-native compression method.
   const compressedPdf = await PDFDocument.create();
   
-  // Strip all non-essential metadata for Maximum Purge
+  // Strip all non-essential metadata for High/Maximum Purge
   if (level === 'high') {
     compressedPdf.setProducer('GlassPDF Ultra-Purge Engine 3.0');
     compressedPdf.setCreator('GlassPDF Studio');
+    // Purging metadata titles/authors can save significant bytes in small PDFs
     compressedPdf.setTitle('');
     compressedPdf.setAuthor('');
+    compressedPdf.setSubject('');
+    compressedPdf.setKeywords([]);
   }
 
-  // Copy pages: pdf-lib natively deduplicates shared objects during this migration
+  // Migration: pdf-lib natively deduplicates shared objects during this page copy process
   const copiedPages = await compressedPdf.copyPages(sourcePdf, sourcePdf.getPageIndices());
   copiedPages.forEach((page) => compressedPdf.addPage(page));
 
-  // useObjectStreams: Mandatory for maximum structural reduction. Bundles objects into streams.
+  // useObjectStreams: Critical for structural reduction. Bundles objects into compressed streams.
   return await compressedPdf.save({
     useObjectStreams: true,
     addDefaultPage: false,
