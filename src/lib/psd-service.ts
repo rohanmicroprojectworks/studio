@@ -1,7 +1,7 @@
 
 /**
- * @fileoverview Universal PSD Processing Service
- * Responsibility: High-fidelity PSD rendering with full layer composition, resilient parsing, and format export.
+ * @fileoverview Resilient Universal PSD Processing Service
+ * Responsibility: High-fidelity PSD rendering with multi-stage fallback for maximum compatibility.
  * Author: GlassPDF Team
  * License: MIT
  */
@@ -32,8 +32,8 @@ const BLEND_MODE_MAP: Record<string, GlobalCompositeOperation> = {
 };
 
 /**
- * Renders any PSD file to a canvas using a multi-engine fallback approach.
- * Target: Full compatibility without needing "Maximize Compatibility".
+ * Renders any PSD file to a canvas using an aggressive multi-stage fallback strategy.
+ * This approach ensures that even "corrupt" or complex files saved without compatibility can open.
  */
 export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> => {
   const buffer = await file.arrayBuffer();
@@ -43,17 +43,18 @@ export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> 
   if (buffer.byteLength >= 4) {
     const signature = view.getUint32(0);
     if (signature === 0x25504446) { // %PDF
-      throw new Error('This is a PDF file. Please use the PDF Viewer tool to open it.');
+      throw new Error('This is a PDF file. Use the PDF Viewer tool.');
     }
     if (signature !== 0x38425053) { // 8BPS
-      throw new Error('Invalid PSD file signature. Please upload a valid Photoshop (.psd) document.');
+      throw new Error('Invalid PSD signature. Please upload a valid Photoshop document.');
     }
   }
 
-  let psd: Psd;
+  let psd: Psd | null = null;
+  let errorMsg = '';
 
+  // Stage 1: High Fidelity (Full layers + Canvas)
   try {
-    // Attempt 1: Full High-Fidelity Read
     psd = readPsd(buffer, { 
       readCanvas: true, 
       readLayers: true,
@@ -61,32 +62,40 @@ export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> 
       skipCompositeImageData: false,
       skipThumbnail: true
     });
-  } catch (error: any) {
-    // Attempt 2: Fallback if layer masks are problematic (common "Not Implemented" crash site)
-    if (error.message?.includes('layer mask data') || error.message?.includes('Not Implemented')) {
+  } catch (err: any) {
+    errorMsg = err.message || '';
+    
+    // Stage 2: Resilient Layer Read (Skip problematic mask data)
+    try {
+      psd = readPsd(buffer, { 
+        readCanvas: true, 
+        readLayers: true,
+        skipLayerImageData: false,
+        skipLayerMasks: true, // Common crash point
+        skipThumbnail: true
+      });
+    } catch (err2) {
+      // Stage 3: Composite Only (Highest success rate)
       try {
         psd = readPsd(buffer, { 
           readCanvas: true, 
-          readLayers: true,
-          skipLayerImageData: false,
-          skipCompositeImageData: false,
-          skipLayerMasks: true, // Bypass the problematic section
+          readLayers: false, // Don't even try to parse layers
           skipThumbnail: true
         });
-      } catch (fallbackError) {
-        throw new Error('This PSD structure is currently unsupported by our browser-native engine.');
+      } catch (err3) {
+        throw new Error('This PSD structure is extremely complex and cannot be parsed by the local engine.');
       }
-    } else {
-      throw error;
     }
   }
+
+  if (!psd) throw new Error('Failed to parse document data.');
 
   // Priority 1: Use the pre-rendered composite canvas if available
   if (psd.canvas) {
     return psd.canvas;
   }
 
-  // Priority 2: Manual Composition (Fallback for files without Maximize Compatibility)
+  // Priority 2: Manual Composition from Layer Stack
   if (psd.children && psd.children.length > 0) {
     const canvas = document.createElement('canvas');
     canvas.width = psd.width;
@@ -94,39 +103,25 @@ export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> 
     const ctx = canvas.getContext('2d');
     
     if (ctx) {
-      // Clear canvas for transparency
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Recursive compositor for layer hierarchy
       const renderLayerStack = (layers: any[]) => {
-        // PSD layers are stored top-to-bottom, so we draw backwards (bottom-up)
+        // Draw bottom-up
         for (let i = layers.length - 1; i >= 0; i--) {
           const layer = layers[i];
-          
           if (layer.hidden) continue;
 
-          // Handle Groups/Folders
           if (layer.children) {
             renderLayerStack(layer.children);
             continue;
           }
 
-          // Draw layer image data
           if (layer.canvas) {
-            const layerCanvas = layer.canvas;
-            const left = layer.left || 0;
-            const top = layer.top || 0;
-
             ctx.save();
-            
-            // Apply opacity
             ctx.globalAlpha = (layer.opacity ?? 255) / 255;
-            
-            // Apply Blend Mode mapping
             const blendMode = layer.blendMode || 'norm';
             ctx.globalCompositeOperation = BLEND_MODE_MAP[blendMode] || 'source-over';
-            
-            ctx.drawImage(layerCanvas, left, top);
+            ctx.drawImage(layer.canvas, layer.left || 0, layer.top || 0);
             ctx.restore();
           }
         }
@@ -137,7 +132,7 @@ export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> 
     }
   }
   
-  throw new Error('The document contains no renderable image data. Ensure your layers are visible.');
+  throw new Error('The document contains no renderable image data.');
 };
 
 /**
@@ -164,22 +159,12 @@ export const exportCanvasAsImage = (canvas: HTMLCanvasElement, format: 'png' | '
  */
 export const exportCanvasAsPDF = async (canvas: HTMLCanvasElement, fileName: string): Promise<Uint8Array> => {
   const pdfDoc = await PDFDocument.create();
-  
-  // Use high-quality JPEG for the PDF container to balance size and quality
   const imgData = canvas.toDataURL('image/jpeg', 0.92);
   const imgBytes = await fetch(imgData).then(res => res.arrayBuffer());
   const img = await pdfDoc.embedJpg(imgBytes);
   
   const page = pdfDoc.addPage([img.width, img.height]);
-  page.drawImage(img, {
-    x: 0,
-    y: 0,
-    width: img.width,
-    height: img.height,
-  });
+  page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
   
-  return await pdfDoc.save({ 
-    useObjectStreams: true,
-    objectsPerStream: 50 
-  });
+  return await pdfDoc.save({ useObjectStreams: true, objectsPerStream: 50 });
 };

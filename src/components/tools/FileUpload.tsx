@@ -39,7 +39,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setDragActive(false);
-    const files = Array.from(e.dataTransfer.files).filter(f => f.type === 'application/pdf' || f.name.endsWith('.psd'));
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.psd'));
     if (files.length > 0) {
       onFilesSelected(multiple ? files : [files[0]]);
     }
@@ -108,7 +108,6 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         </motion.div>
       </AnimatePresence>
       
-      {/* Background Decorative Element */}
       <div className="absolute inset-0 bg-gradient-to-tr from-secondary/5 dark:from-primary/5 to-transparent pointer-events-none -z-10"></div>
     </div>
   );
