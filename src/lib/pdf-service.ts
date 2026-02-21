@@ -91,21 +91,21 @@ export const extractAndMergePDFRanges = async (
 
 /**
  * Compresses a PDF file by optimizing internal streams and re-bundling objects.
- * Uses a "Deep Re-bundling" strategy to purge structural bloat.
+ * Uses a total structural re-indexing strategy for maximum structural reduction.
  */
 export const compressPDFDocument = async (
   file: File, 
   level: 'low' | 'medium' | 'high'
 ): Promise<Uint8Array> => {
   const bytes = await file.arrayBuffer();
-  // Using ignoreEncryption to attempt structural optimization even on restricted files
+  // We load with ignoreEncryption to maximize structural reach
   const sourcePdf = await PDFDocument.load(bytes, { ignoreEncryption: true });
   
-  // Create a completely new document to force total re-indexing and deduplication
+  // Create a completely new document context to force total re-indexing
   const compressedPdf = await PDFDocument.create();
   
-  // Strip ALL metadata for maximum purge
-  if (level === 'high' || level === 'medium') {
+  // Stripping ALL metadata for Maximum Purge
+  if (level === 'high') {
     compressedPdf.setTitle('');
     compressedPdf.setAuthor('');
     compressedPdf.setSubject('');
@@ -114,15 +114,11 @@ export const compressPDFDocument = async (
     compressedPdf.setCreator('GlassPDF Studio');
   }
 
-  // Deep copy pages: This is the most effective way in pdf-lib to deduplicate resources
-  // It forces the library to recreate the object graph from scratch.
+  // Deep copy pages deduplicates resources natively in pdf-lib
   const copiedPages = await compressedPdf.copyPages(sourcePdf, sourcePdf.getPageIndices());
   copiedPages.forEach((page) => compressedPdf.addPage(page));
 
-  // save options:
-  // useObjectStreams: Bundles multiple objects into a single stream (massive overhead reduction)
-  // addDefaultPage: false - prevents adding unnecessary default objects
-  // updateFieldAppearances: false - reduces stream updates for forms
+  // useObjectStreams: Bundles objects into streams for massive structural reduction
   return await compressedPdf.save({
     useObjectStreams: true,
     addDefaultPage: false,

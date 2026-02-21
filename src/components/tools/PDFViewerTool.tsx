@@ -84,7 +84,6 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
           setCurrentPage(1);
           setSearchResults([]);
           setCurrentSearchIndex(-1);
-          // Force initial zoom to 100% (1.0) as requested
           setZoom(1.0);
         } catch (err) {
           toast({ variant: "destructive", title: "Load Failed", description: "Could not open this PDF." });
@@ -123,27 +122,23 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
     renderPage();
   }, [renderPage]);
 
-  // Handle Mouse Wheel and Trackpad Zoom
+  // Mouse wheel and trackpad zoom
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-
     const handleWheel = (e: WheelEvent) => {
-      // Zoom only if Ctrl is pressed (standard browser convention for pinch/scroll zoom)
       if (e.ctrlKey) {
-        e.preventDefault(); // Stop entire browser page from zooming
+        e.preventDefault();
         const zoomStep = 0.05;
-        // Directional scaling logic
         const delta = e.deltaY > 0 ? -zoomStep : zoomStep;
         setZoom((prev) => Math.min(5, Math.max(0.1, prev + delta)));
       }
     };
-
-    // Use non-passive to allow e.preventDefault() for overriding browser zoom
     container.addEventListener('wheel', handleWheel, { passive: false });
     return () => container.removeEventListener('wheel', handleWheel);
   }, []);
 
+  // Auto-hide controls logic
   useEffect(() => {
     const handleMouseMove = () => {
       setControlsVisible(true);
@@ -152,7 +147,6 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
         if (!showSearchInput) setControlsVisible(false);
       }, 3000);
     };
-
     const container = viewerRef.current;
     if (container) container.addEventListener('mousemove', handleMouseMove);
     return () => {
@@ -211,7 +205,14 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
 
   if (!sourceFile) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-4">
+      <div className="h-full flex flex-col items-center justify-center p-4 bg-slate-100 dark:bg-zinc-950 relative">
+        <Button 
+          variant="ghost" 
+          onClick={() => onExit?.()} 
+          className="absolute top-8 left-8 h-14 w-14 rounded-full glass hover:bg-white/40 dark:hover:bg-white/10 border-white/40 shadow-2xl z-50 transition-all duration-300"
+        >
+          <ArrowLeft className="w-6 h-6 text-slate-900 dark:text-white" />
+        </Button>
         <div className="w-full max-w-4xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="text-center space-y-2">
             <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Immersive Viewer</h2>
@@ -239,7 +240,6 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
             exit={{ y: -50, opacity: 0 }}
             className="absolute top-8 left-0 w-full px-8 z-50 flex items-center justify-between pointer-events-none"
           >
-            {/* Top Left Navigation Group */}
             <div className="flex items-center space-x-3 pointer-events-auto">
               <Button 
                 variant="ghost" 
@@ -262,9 +262,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
               </Button>
             </div>
 
-            {/* Top Right Actions Group */}
             <div className="flex items-center space-x-3 pointer-events-auto">
-              {/* Adaptive Search Bar */}
               <AnimatePresence>
                 {showSearchInput && (
                   <motion.div 
@@ -293,13 +291,11 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
                 )}
               </AnimatePresence>
 
-              {/* Liquid Quick Actions Hub (3 dots) */}
               <div className="relative group">
                 <div className="h-14 w-14 glass flex items-center justify-center rounded-full cursor-pointer hover:scale-110 transition-all duration-500 border-white/40 shadow-2xl">
                   <MoreVertical className="w-6 h-6 text-slate-900 dark:text-white" />
                 </div>
                 
-                {/* Expansion Menu - Anchored to right edge to prevent overflow */}
                 <div className="absolute top-full right-0 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-500 pt-4 z-50">
                   <div className="glass p-3 rounded-[2rem] flex items-center space-x-2 border-white/30 dark:border-white/10 shadow-2xl min-w-max backdrop-blur-3xl">
                     <Button 
@@ -320,7 +316,6 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
                 </div>
               </div>
 
-              {/* Fullscreen Toggle */}
               <Button 
                 variant="ghost" 
                 size="icon" 
