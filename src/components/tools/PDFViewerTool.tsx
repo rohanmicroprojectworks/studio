@@ -55,7 +55,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [pdfDoc, setPdfDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [zoom, setZoom] = useState(1.0);
+  const [zoom, setZoom] = useState(1.0); // Default to 100% (1.0)
   const [showThumbnails, setShowThumbnails] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -84,7 +84,8 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
           setCurrentPage(1);
           setSearchResults([]);
           setCurrentSearchIndex(-1);
-          setTimeout(() => calculateInitialZoom(pdf), 100);
+          // Force initial zoom to 100% (1.0) as requested
+          setZoom(1.0);
         } catch (err) {
           toast({ variant: "destructive", title: "Load Failed", description: "Could not open this PDF." });
           setSourceFile(null);
@@ -95,19 +96,6 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
       loadPDF();
     }
   }, [sourceFile, toast]);
-
-  const calculateInitialZoom = async (pdf: pdfjsLib.PDFDocumentProxy) => {
-    if (!containerRef.current) return;
-    try {
-      const page = await pdf.getPage(1);
-      const viewport = page.getViewport({ scale: 1.0 });
-      const containerWidth = containerRef.current.clientWidth - 80;
-      const scale = containerWidth / viewport.width;
-      setZoom(Math.min(scale, 1.5));
-    } catch (e) {
-      setZoom(1.0);
-    }
-  };
 
   const renderPage = useCallback(async () => {
     if (pdfDoc && canvasRef.current && containerRef.current) {
@@ -141,17 +129,17 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
     if (!container) return;
 
     const handleWheel = (e: WheelEvent) => {
-      // Pinch-to-zoom on trackpads or Ctrl + Scroll on mouse usually triggers ctrlKey
+      // Zoom only if Ctrl is pressed (standard browser convention for pinch/scroll zoom)
       if (e.ctrlKey) {
-        e.preventDefault();
+        e.preventDefault(); // Stop entire browser page from zooming
         const zoomStep = 0.05;
-        // Natural feeling zoom direction
+        // Directional scaling logic
         const delta = e.deltaY > 0 ? -zoomStep : zoomStep;
-        setZoom((prev) => Math.min(5, Math.max(0.2, prev + delta)));
+        setZoom((prev) => Math.min(5, Math.max(0.1, prev + delta)));
       }
     };
 
-    // Use non-passive to allow e.preventDefault()
+    // Use non-passive to allow e.preventDefault() for overriding browser zoom
     container.addEventListener('wheel', handleWheel, { passive: false });
     return () => container.removeEventListener('wheel', handleWheel);
   }, []);
@@ -249,10 +237,10 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
             initial={{ y: -50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -50, opacity: 0 }}
-            className="absolute top-8 left-0 w-full px-8 z-50 flex items-center justify-between"
+            className="absolute top-8 left-0 w-full px-8 z-50 flex items-center justify-between pointer-events-none"
           >
             {/* Top Left Navigation Group */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 pointer-events-auto">
               <Button 
                 variant="ghost" 
                 size="icon" 
@@ -275,7 +263,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
             </div>
 
             {/* Top Right Actions Group */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 pointer-events-auto">
               {/* Adaptive Search Bar */}
               <AnimatePresence>
                 {showSearchInput && (
@@ -395,7 +383,7 @@ export const PDFViewerTool: React.FC<PDFViewerToolProps> = ({ onExit, onSwitchTo
                 <Button variant="ghost" size="icon" onClick={() => setCurrentPage(Math.min(pdfDoc?.numPages || 1, currentPage + 1))} disabled={currentPage === pdfDoc?.numPages} className="h-10 w-10 rounded-full"><ChevronRight className="w-4 h-4" /></Button>
               </div>
               <div className="flex items-center space-x-1 pl-4">
-                <Button variant="ghost" size="icon" onClick={() => setZoom(prev => Math.max(0.2, prev - 0.2))} className="h-10 w-10 rounded-full"><ZoomOut className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" onClick={() => setZoom(prev => Math.max(0.1, prev - 0.2))} className="h-10 w-10 rounded-full"><ZoomOut className="w-4 h-4" /></Button>
                 <div className="px-3 flex flex-col items-center min-w-[60px]">
                   <span className="text-[10px] font-black tabular-nums">{Math.round(zoom * 100)}%</span>
                 </div>
