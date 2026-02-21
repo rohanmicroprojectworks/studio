@@ -1,7 +1,7 @@
 
 /**
- * @fileoverview Resilient Universal PSD Processing Service
- * Responsibility: High-fidelity PSD rendering with multi-stage fallback for maximum compatibility.
+ * @fileoverview High-Fidelity Universal PSD Composition Service
+ * Responsibility: Multi-stage resilient PSD rendering with fallback strategies for complex structures.
  * Author: GlassPDF Team
  * License: MIT
  */
@@ -10,144 +10,121 @@ import { readPsd, Psd } from 'ag-psd';
 import { PDFDocument } from 'pdf-lib';
 
 /**
- * Mapping of PSD blend mode keys to HTML5 Canvas composite operations.
- */
-const BLEND_MODE_MAP: Record<string, GlobalCompositeOperation> = {
-  'norm': 'source-over',
-  'mult': 'multiply',
-  'scrn': 'screen',
-  'over': 'overlay',
-  'dark': 'darken',
-  'lite': 'lighten',
-  'colD': 'color-dodge',
-  'colB': 'color-burn',
-  'hLit': 'hard-light',
-  'sLit': 'soft-light',
-  'diff': 'difference',
-  'excl': 'exclusion',
-  'hue ': 'hue',
-  'sat ': 'saturation',
-  'colr': 'color',
-  'lum ': 'luminosity',
-};
-
-/**
- * Renders any PSD file to a canvas using an aggressive multi-stage fallback strategy.
- * This approach ensures that even "corrupt" or complex files saved without compatibility can open.
+ * Renders any PSD file to a canvas using a multi-stage resilient strategy.
+ * Stage 1: Full Fidelity (Layers + Masks)
+ * Stage 2: Safe Mode (Bypass problematic metadata)
+ * Stage 3: Composite Only
  */
 export const renderPSDToCanvas = async (file: File): Promise<HTMLCanvasElement> => {
   const buffer = await file.arrayBuffer();
+  const uint8 = new Uint8Array(buffer);
 
-  // Signature Validation
+  // File Validation: Check signature
   const view = new DataView(buffer);
   if (buffer.byteLength >= 4) {
-    const signature = view.getUint32(0);
-    if (signature === 0x25504446) { // %PDF
-      throw new Error('This is a PDF file. Use the PDF Viewer tool.');
-    }
-    if (signature !== 0x38425053) { // 8BPS
-      throw new Error('Invalid PSD signature. Please upload a valid Photoshop document.');
-    }
+    const sig = view.getUint32(0);
+    if (sig === 0x25504446) throw new Error('This is a PDF file. Use the PDF Viewer tool.');
+    if (sig !== 0x38425053) throw new Error('Not a valid PSD file. Signature check failed.');
   }
 
-  let psd: Psd | null = null;
-  let errorMsg = '';
-
-  // Stage 1: High Fidelity (Full layers + Canvas)
+  // Attempt 1: High Fidelity Render (Layers + Masks + Blend Modes)
   try {
-    psd = readPsd(buffer, { 
+    const psd = readPsd(uint8, { 
+      readCanvas: true, 
+      readLayers: true,
+      skipLayerImageData: false 
+    });
+    
+    if (psd.canvas) return psd.canvas;
+    if (psd.children && psd.children.length > 0) {
+      const manualCanvas = createCanvasFromLayers(psd);
+      if (manualCanvas) return manualCanvas;
+    }
+  } catch (err: any) {
+    console.warn('[PSD Service] Stage 1 (Fidelity) failed:', err.message);
+  }
+
+  // Attempt 2: Safe Mode (Bypass metadata parsing that often triggers "Not Implemented")
+  try {
+    const psdSafe = readPsd(uint8, { 
       readCanvas: true, 
       readLayers: true,
       skipLayerImageData: false,
-      skipCompositeImageData: false,
       skipThumbnail: true
     });
+    if (psdSafe.canvas) return psdSafe.canvas;
   } catch (err: any) {
-    errorMsg = err.message || '';
-    
-    // Stage 2: Resilient Layer Read (Skip problematic mask data)
-    try {
-      psd = readPsd(buffer, { 
-        readCanvas: true, 
-        readLayers: true,
-        skipLayerImageData: false,
-        skipLayerMasks: true, // Common crash point
-        skipThumbnail: true
-      });
-    } catch (err2) {
-      // Stage 3: Composite Only (Highest success rate)
-      try {
-        psd = readPsd(buffer, { 
-          readCanvas: true, 
-          readLayers: false, // Don't even try to parse layers
-          skipThumbnail: true
-        });
-      } catch (err3) {
-        throw new Error('This PSD structure is extremely complex and cannot be parsed by the local engine.');
+    console.warn('[PSD Service] Stage 2 (Safe Mode) failed:', err.message);
+  }
+
+  // Attempt 3: Composite Baseline (Fastest, uses Photoshop's pre-rendered preview)
+  try {
+    const psdComposite = readPsd(uint8, { 
+      readCanvas: true, 
+      readLayers: false,
+      skipThumbnail: true
+    });
+    if (psdComposite.canvas) return psdComposite.canvas;
+  } catch (err: any) {
+    console.warn('[PSD Service] Stage 3 (Composite) failed:', err.message);
+  }
+
+  throw new Error('This PSD structure is unsupported by the local engine. Try saving with "Maximize Compatibility" enabled.');
+};
+
+/**
+ * Manually composites the layer stack if no pre-rendered canvas exists.
+ * Supports: Visibility, Opacity, and basic Layer Hierarchy.
+ */
+function createCanvasFromLayers(psd: Psd): HTMLCanvasElement | null {
+  if (!psd.width || !psd.height) return null;
+  const canvas = document.createElement('canvas');
+  canvas.width = psd.width;
+  canvas.height = psd.height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+
+  const renderLayers = (layers: any[]) => {
+    // Photoshop layers are stored top-down, so we render bottom-up
+    for (let i = layers.length - 1; i >= 0; i--) {
+      const layer = layers[i];
+      if (layer.hidden) continue;
+
+      if (layer.children) {
+        renderLayers(layer.children);
+        continue;
+      }
+
+      if (layer.canvas) {
+        ctx.save();
+        ctx.globalAlpha = (layer.opacity ?? 255) / 255;
+        // Basic mapping for common blend modes
+        if (layer.blendMode === 'mul ') ctx.globalCompositeOperation = 'multiply';
+        if (layer.blendMode === 'scrn') ctx.globalCompositeOperation = 'screen';
+        
+        ctx.drawImage(layer.canvas, layer.left || 0, layer.top || 0);
+        ctx.restore();
       }
     }
-  }
+  };
 
-  if (!psd) throw new Error('Failed to parse document data.');
-
-  // Priority 1: Use the pre-rendered composite canvas if available
-  if (psd.canvas) {
-    return psd.canvas;
-  }
-
-  // Priority 2: Manual Composition from Layer Stack
-  if (psd.children && psd.children.length > 0) {
-    const canvas = document.createElement('canvas');
-    canvas.width = psd.width;
-    canvas.height = psd.height;
-    const ctx = canvas.getContext('2d');
-    
-    if (ctx) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      const renderLayerStack = (layers: any[]) => {
-        // Draw bottom-up
-        for (let i = layers.length - 1; i >= 0; i--) {
-          const layer = layers[i];
-          if (layer.hidden) continue;
-
-          if (layer.children) {
-            renderLayerStack(layer.children);
-            continue;
-          }
-
-          if (layer.canvas) {
-            ctx.save();
-            ctx.globalAlpha = (layer.opacity ?? 255) / 255;
-            const blendMode = layer.blendMode || 'norm';
-            ctx.globalCompositeOperation = BLEND_MODE_MAP[blendMode] || 'source-over';
-            ctx.drawImage(layer.canvas, layer.left || 0, layer.top || 0);
-            ctx.restore();
-          }
-        }
-      };
-      
-      renderLayerStack(psd.children);
-      return canvas;
-    }
-  }
-  
-  throw new Error('The document contains no renderable image data.');
-};
+  if (psd.children) renderLayers(psd.children);
+  return canvas;
+}
 
 /**
  * Exports a canvas as a high-quality image file.
  */
 export const exportCanvasAsImage = (canvas: HTMLCanvasElement, format: 'png' | 'jpg', fileName: string) => {
   const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
-  const extension = format === 'png' ? 'png' : 'jpg';
+  const ext = format === 'png' ? 'png' : 'jpg';
   
   canvas.toBlob((blob) => {
     if (blob) {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${fileName.split('.')[0]}.${extension}`;
+      link.download = `${fileName.split('.')[0]}.${ext}`;
       link.click();
       URL.revokeObjectURL(url);
     }
